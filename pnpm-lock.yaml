@@ -40,7 +40,7 @@ importers:
         specifier: ^3
         version: 3.3.1
       '@tailwindcss/postcss':
-        specifier: ^4
+        specifier: ^4.0.17
         version: 4.0.17
       '@types/node':
         specifier: ^20
@@ -52,8 +52,8 @@ importers:
         specifier: ^19
         version: 19.0.4(@types/react@19.0.12)
       daisyui:
-        specifier: ^5.0.9
-        version: 5.0.9
+        specifier: ^5.0.12
+        version: 5.0.12
       eslint:
         specifier: ^9
         version: 9.23.0(jiti@2.4.2)
@@ -61,7 +61,7 @@ importers:
         specifier: 15.2.4
         version: 15.2.4(eslint@9.23.0(jiti@2.4.2))(typescript@5.8.2)
       tailwindcss:
-        specifier: ^4
+        specifier: ^4.0.17
         version: 4.0.17
       typescript:
         specifier: ^5
@@ -792,8 +792,8 @@ packages:
   csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
 
-  daisyui@5.0.9:
-    resolution: {integrity: sha512-RsaehHh45f+0shWgZZaOY09/8eOae2voRsqJCD71j9yrnYgcke0Nj5ys0ZxrW4SPcc4+q96kWyJu0Z8P1zZdoA==}
+  daisyui@5.0.12:
+    resolution: {integrity: sha512-01DU0eYBcHgPtuf5fxcrkGkIN6/Uyaqmkle5Yo3ZyW9YVAu036ALZbjv2KH5euvUbeQ4r9q3gAarGcf7Tywhng==}
 
   damerau-levenshtein@1.0.8:
     resolution: {integrity: sha512-sdQSFB7+llfUcQHUQO3+B8ERRj0Oa4w9POWMI/puGtuf7gFywGmkaLCElnudfTiKZV+NvHqL0ifzdrI8Ro7ESA==}
@@ -2584,7 +2584,7 @@ snapshots:
 
   csstype@3.1.3: {}
 
-  daisyui@5.0.9: {}
+  daisyui@5.0.12: {}
 
   damerau-levenshtein@1.0.8: {}
 
