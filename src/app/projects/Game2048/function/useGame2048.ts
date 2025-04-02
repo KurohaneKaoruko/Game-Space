@@ -106,7 +106,12 @@ export function useGame2048() {
     };
     
     // 简单加密函数 - Base64 + 简单密钥混淆
-    const encryptData = (data: any) => {
+    const encryptData = (data: {
+      playerName: string,
+      score: number,
+      timestamp: number,
+      gameSize: number
+    }) => {
       // 转成字符串
       const jsonStr = JSON.stringify(data);
       // 简单密钥
