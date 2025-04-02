@@ -1,6 +1,6 @@
 {
-  "name": "night-project",
-  "version": "0.1.0",
+  "name": "project",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -13,6 +13,8 @@
     "git-cz": "^4.9.0",
     "gsap": "^3.12.7",
     "lenis": "^1.2.3",
+    "mongodb": "^6.15.0",
+    "mongoose": "^8.13.1",
     "next": "15.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

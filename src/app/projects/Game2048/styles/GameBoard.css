@@ -19,8 +19,10 @@
 
 .game-grid[data-size="7"] {
   grid-template-columns: repeat(7, 1fr);
+  gap: 0.2rem;
 }
 
 .game-grid[data-size="8"] {
   grid-template-columns: repeat(8, 1fr);
+  gap: 0.2rem;
 }

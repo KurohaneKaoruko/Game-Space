@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
+import { getSize, getHighScore } from './localData'
+
 interface GameState {
   board: number[][];
   score: number;
@@ -11,6 +13,7 @@ interface GameState {
 const STORAGE_KEYS = {
   SIZE: 'game2048_size',
   HIGH_SCORE: 'game2048_high_score',
+  HIGH_SCORE_4: 'game2048_high_score',
   HIGH_SCORE_5: 'game2048_high_score_5',
   HIGH_SCORE_6: 'game2048_high_score_6',
   HIGH_SCORE_7: 'game2048_high_score_7',
@@ -23,16 +26,8 @@ const getValidSize = (size: number): number => {
 };
 
 const initializeClientState = (): GameState => {
-  const savedSize = localStorage.getItem(STORAGE_KEYS.SIZE);
-  const size = getValidSize(savedSize ? parseInt(savedSize) : 4);
-  const savedHighScore = 
-    size === 4 ? localStorage.getItem(STORAGE_KEYS.HIGH_SCORE) :
-    size === 5 ? localStorage.getItem(STORAGE_KEYS.HIGH_SCORE_5) :
-    size === 6 ? localStorage.getItem(STORAGE_KEYS.HIGH_SCORE_6) :
-    size === 7 ? localStorage.getItem(STORAGE_KEYS.HIGH_SCORE_7) :
-    size === 8 ? localStorage.getItem(STORAGE_KEYS.HIGH_SCORE_8) :
-    0;
-  const highScore = savedHighScore ? parseInt(savedHighScore) : 0;
+  const size = getSize()
+  const highScore = getHighScore(size)
   
   return {
     board: Array(size).fill(0).map(() => Array(size).fill(0)),
@@ -54,7 +49,7 @@ export function useGame2048() {
 
   useEffect(() => {
     const clientState = initializeClientState();
-    addNewTile(clientState.board);
+    addNewTile(clientState.board, clientState.size);
     setGameState(clientState);
   }, []);
 
@@ -74,7 +69,7 @@ export function useGame2048() {
         0;
       const highScore = savedHighScore ? parseInt(savedHighScore) : 0;
       
-      addNewTile(newBoard);
+      addNewTile(newBoard, validSize);
       setGameState({
         board: newBoard,
         score: 0,
@@ -96,8 +91,45 @@ export function useGame2048() {
     const savedSize = localStorage.getItem(STORAGE_KEYS.SIZE);
     const size = getValidSize(savedSize ? parseInt(savedSize) : 4);
     initGame(size);
-    console.log('onRestart', size);
   }, [initGame]);
+
+  const submitScore = useCallback((playerName: string = 'No Name') => {
+    const score = gameState.score;
+    const timestamp = Date.now();
+    
+    // 创建加密的数据对象
+    const rawData = {
+      playerName: playerName || 'No Name',
+      score,
+      timestamp,
+      gameSize: gameState.size
+    };
+    
+    // 简单加密函数 - Base64 + 简单密钥混淆
+    const encryptData = (data: any) => {
+      // 转成字符串
+      const jsonStr = JSON.stringify(data);
+      // 简单密钥
+      const secretKey = process.env.NEXT_PUBLIC_GAME_2048_SUBMIT_KEY;
+      // 添加密钥特征码
+      const dataWithKey = jsonStr + '|' + secretKey;
+      // Base64编码
+      return btoa(dataWithKey);
+    };
+    
+    // 发送加密后的数据
+    fetch('/api/game2048/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        data: encryptData(rawData),
+        // 添加一个校验和
+        checksum: btoa(String(rawData.score) + rawData.timestamp)
+      }),
+    });
+  }, [gameState.score, gameState.size]);
 
   // 更新最高分
   const updateHighScore = useCallback((score: number) => {
@@ -122,7 +154,7 @@ export function useGame2048() {
   }, [gameState.highScore, gameState.size]);
 
   // 添加新方块
-  const addNewTile = (board: number[][]) => {
+  const addNewTile = (board: number[][], size: number) => {
     const emptyCells = [];
     for (let i = 0; i < board.length; i++) {
       for (let j = 0; j < board.length; j++) {
@@ -133,7 +165,22 @@ export function useGame2048() {
     }
     if (emptyCells.length > 0) {
       const { x, y } = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-      board[x][y] = Math.random() < 0.9 ? 2 : 4;
+      if (size <= 4) {
+        // 90% 9% 1%
+        board[x][y] = Math.random() < 0.9 ? 2 :
+                      Math.random() < 0.9 ? 4 : 8;
+      } else if (size <= 6) {
+        // 70% 21% 6.3% 2.7%
+        board[x][y] = Math.random() < 0.7 ? 2 :
+                      Math.random() < 0.7 ? 4 :
+                      Math.random() < 0.7 ? 8 : 16;
+      } else {
+        // 50% 25% 12.5% 6.25% 3.125%
+        board[x][y] = Math.random() < 0.5 ? 2 :
+                      Math.random() < 0.5 ? 4 :
+                      Math.random() < 0.5 ? 8 :
+                      Math.random() < 0.5 ? 16 : 32;
+      }
     }
   };
 
@@ -171,7 +218,7 @@ export function useGame2048() {
 
     // 向左移动并合并
     for (let i = 0; i < newBoard.length; i++) {
-      const row = newBoard[i].filter((cell: number) => cell !== 0);
+      const row = newBoard[i].filter((cell: number) => cell !== 0 || cell === Infinity);
       for (let j = 0; j < row.length - 1; j++) {
         if (row[j] === row[j + 1]) {
           row[j] *= 2;
@@ -180,7 +227,7 @@ export function useGame2048() {
           moved = true;
         }
       }
-      const newRow = [...row, ...Array(newBoard.length - row.length).fill(0)];
+      const newRow = [...row, ...Array(newBoard.length - row.length).fill(0)].map(value => value ?? Infinity);
       if (JSON.stringify(newBoard[i]) !== JSON.stringify(newRow)) {
         moved = true;
       }
@@ -195,7 +242,7 @@ export function useGame2048() {
     }
 
     if (moved) {
-      addNewTile(newBoard);
+      addNewTile(newBoard, gameState.size);
       const isGameOver = checkGameOver(newBoard);
       setGameState(prev => ({
         board: newBoard,
@@ -274,6 +321,7 @@ export function useGame2048() {
     size: gameState.size,
     highScore: gameState.highScore,
     onSizeChange,
-    onRestart
+    onRestart,
+    submitScore
   };
 }

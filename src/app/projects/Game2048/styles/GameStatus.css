@@ -1,0 +1,17 @@
+.score-box {
+    display: flex;
+    flex-direction: column;
+    gap: 3;
+}
+
+@media (max-width: 1024px) {
+    .score-box {
+        flex-direction: row;
+        gap: 10;
+    }
+    .score-box > * {
+        flex: 1 1 0%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+}

@@ -1,13 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useGame2048 } from './useGame2048';
+import { useGame2048 } from './function/useGame2048';
 import GameBoard from './components/GameBoard';
 import GameStatus from './components/GameStatus';
 import GameOver from './components/GameOver';
 import GameRules from './components/GameRules';
 import GameSettings from './components/GameSettings';
+import GameRankings from './components/GameRankings';
 import { useEffect, useState } from 'react';
+
 
 export default function Game2048Page() {
   const {
@@ -17,7 +19,8 @@ export default function Game2048Page() {
     size,
     highScore,
     onSizeChange,
-    onRestart
+    onRestart,
+    submitScore,
   } = useGame2048();
 
   const [isMobile, setIsMobile] = useState(true);
@@ -59,23 +62,32 @@ export default function Game2048Page() {
             </svg>
             返回首页
           </Link>
+          {!isMobile && <h1 className="text-2xl font-bold text-center text-gray-800 mb-1">2048 游戏</h1>}
+          <Link 
+            href="/projects" 
+            className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            更多其他项目
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path 
+                fillRule="evenodd" 
+                d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </Link>
         </div>
         
         <div className="flex flex-col lg:flex-row lg:items-start lg:space-x-6">
           {/* 游戏主区域 */}
-          <div className="lg:flex-1 bg-white rounded-xl shadow-md overflow-hidden mb-4 lg:mb-0 p-4 pl-8 pr-8">
-            <h1 className="text-2xl font-bold text-center text-gray-800 mb-1">2048 游戏</h1>
-            <p className="text-center text-gray-600 mb-3 text-sm">
-              {isMobile 
-                ? "向上、下、左、右滑动来移动方块" 
-                : "使用键盘方向键来移动方块"}
-            </p>
-            
+          <div className="lg:flex-1 bg-white rounded-xl shadow-md overflow-hidden mb-4 lg:mb-0 p-4">
+            {isMobile && <h1 className="text-2xl font-bold text-center text-gray-800 mb-1">2048 游戏</h1>}
             <div className="flex flex-col lg:flex-row lg:space-x-6">
               {/* 左侧状态区域 */}
-              <div className="lg:w-32 flex-shrink-0 space-y-3">
-                <GameStatus score={score} highScore={highScore} onRestart={onRestart} />
+              <div className="lg:w-48 flex-shrink-0 space-y-3">
                 <GameSettings size={size} onSizeChange={onSizeChange} />
+                <GameStatus score={score} highScore={highScore} onRestart={onRestart} />
+                <GameRankings size={size} />
               </div>
               
               {/* 游戏棋盘 */}
@@ -85,7 +97,7 @@ export default function Game2048Page() {
             </div>
             
             {gameOver && (
-              <GameOver score={score} onRestart={onRestart} />
+              <GameOver score={score} onRestart={onRestart} submitScore={submitScore}/>
             )}
           </div>
           

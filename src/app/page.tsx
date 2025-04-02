@@ -17,7 +17,7 @@ export default function Home() {
             <p className="text-xl text-gray-600">
               一些编程项目
             </p>
-            <div className="mt-4">
+            {/* <div className="mt-4">
               <Link 
                 href="/projects" 
                 className="inline-flex items-center text-blue-600 hover:text-blue-800"
@@ -27,7 +27,7 @@ export default function Home() {
                   <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </Link>
-            </div>
+            </div> */}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import '../styles/GameStatus.css';
 
 interface GameStatusProps {
   score: number;
@@ -19,17 +20,19 @@ export default function GameStatus({ score, highScore = 0, onRestart }: GameStat
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="bg-gray-100 rounded-lg p-3 text-center">
-        <p className="text-xs text-gray-500 mb-1">当前分数</p>
-        <p className="text-xl font-bold text-blue-600">{score}</p>
-      </div>
-      
-      {highScore > 0 && (
+      <div className="score-box">
         <div className="bg-gray-100 rounded-lg p-3 text-center">
-          <p className="text-xs text-gray-500 mb-1">最高分数</p>
-          <p className="text-xl font-bold text-purple-600">{highScore}</p>
+          <p className="text-xs text-gray-500 mb-1">当前分数</p>
+          <p className="text-xl font-bold text-blue-600">{score}</p>
         </div>
-      )}
+        
+        {highScore > 0 && (
+          <div className="bg-gray-100 rounded-lg p-3 text-center">
+            <p className="text-xs text-gray-500 mb-1">最高分数</p>
+            <p className="text-xl font-bold text-purple-600">{highScore}</p>
+          </div>
+        )}
+      </div>
       
       <button
         type="button"

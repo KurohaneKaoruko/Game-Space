@@ -1,6 +1,6 @@
 'use client';
 
-import Tile from './Tile';
+import GameTile from './GameTile';
 import { useEffect, useState } from 'react';
 import '../styles/GameBoard.css';
 
@@ -68,14 +68,14 @@ export default function GameBoard({ board }: GameBoardProps) {
   }, [touchStart, touchEnd]);
   
   return (
-    <div id="game-board" className="bg-gray-100 rounded-lg p-2 aspect-square max-w-[500px] mx-auto">
+    <div id="game-board" className="bg-gray-100 rounded-lg p-2 aspect-square max-w-[550px] mx-auto">
       <div 
         className="game-grid"
         data-size={board.length}
       >
         {board.map((row, i) =>
           row.map((value, j) => (
-            <Tile key={`${i}-${j}`} value={value} />
+            <GameTile key={`${i}-${j}`} value={value} />
           ))
         )}
       </div>
