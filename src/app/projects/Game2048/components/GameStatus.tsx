@@ -1,15 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import GameSettings from './GameSettings';
 import '../styles/GameStatus.css';
 
 interface GameStatusProps {
+  size: number;
   score: number;
   highScore?: number;
   onRestart: () => void;
+  onSizeChange: (size: number) => void;
 }
 
-export default function GameStatus({ score, highScore = 0, onRestart }: GameStatusProps) {
+export default function GameStatus({ size, score, highScore = 0, onRestart, onSizeChange }: GameStatusProps) {
   const [isClient, setIsClient] = useState(false);
   
   useEffect(() => {
@@ -26,13 +29,13 @@ export default function GameStatus({ score, highScore = 0, onRestart }: GameStat
           <p className="text-xl font-bold text-blue-600">{score}</p>
         </div>
         
-        {highScore > 0 && (
-          <div className="bg-gray-100 rounded-lg p-3 text-center">
-            <p className="text-xs text-gray-500 mb-1">最高分数</p>
-            <p className="text-xl font-bold text-purple-600">{highScore}</p>
-          </div>
-        )}
+        <div className="bg-gray-100 rounded-lg p-3 text-center">
+          <p className="text-xs text-gray-500 mb-1">最高分数</p>
+          <p className="text-xl font-bold text-purple-600">{highScore}</p>
+        </div>
       </div>
+
+      <GameSettings size={size} onSizeChange={onSizeChange} />
       
       <button
         type="button"

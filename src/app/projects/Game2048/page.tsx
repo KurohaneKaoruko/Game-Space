@@ -5,7 +5,6 @@ import { useGame2048 } from './function/useGame2048';
 import GameBoard from './components/GameBoard';
 import GameStatus from './components/GameStatus';
 import GameOver from './components/GameOver';
-import GameSettings from './components/GameSettings';
 import GameRankings from './components/GameRankings';
 import CollapsibleGameRules from './components/CollapsibleGameRules';
 import EmbeddedRankings from './components/EmbeddedRankings';
@@ -85,8 +84,7 @@ export default function Game2048Page() {
             <div className="flex flex-col lg:flex-row lg:space-x-6">
               {/* 左侧状态区域 */}
               <div className="lg:w-48 flex-shrink-0 space-y-3">
-                <GameSettings size={size} onSizeChange={onSizeChange} />
-                <GameStatus score={score} highScore={highScore} onRestart={onRestart} />
+                <GameStatus size={size} score={score} highScore={highScore} onRestart={onRestart} onSizeChange={onSizeChange} />
                 <CollapsibleGameRules />
               </div>
               
