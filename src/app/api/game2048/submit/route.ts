@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { insertScore } from "@/lib/mongodb2048";
+import { base64ToUtf8 } from '@/utils/utils';
 
 async function dbSave(playerName: string, score: number, timestamp: number, size: number) {
   const date = new Date(timestamp).toLocaleString('zh-CN', {
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
     const decryptData = (encryptedData: string) => {
       try {
         // Base64解码
-        const decodedString = atob(encryptedData);
+        const decodedString = base64ToUtf8(encryptedData);
         // 分离数据和密钥标记
         const separatorIndex = decodedString.lastIndexOf('|');
         if (separatorIndex === -1) throw new Error('数据格式错误');

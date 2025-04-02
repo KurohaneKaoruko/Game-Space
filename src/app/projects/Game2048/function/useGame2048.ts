@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-
 import { getSize, getHighScore } from './localData'
+import { utf8ToBase64 } from '@/utils/utils';
 
 interface GameState {
   board: number[][];
@@ -119,7 +119,7 @@ export function useGame2048() {
       // 添加密钥特征码
       const dataWithKey = jsonStr + '|' + secretKey;
       // Base64编码
-      return btoa(dataWithKey);
+      return utf8ToBase64(dataWithKey);
     };
     
     // 发送加密后的数据
@@ -131,7 +131,7 @@ export function useGame2048() {
       body: JSON.stringify({
         data: encryptData(rawData),
         // 添加一个校验和
-        checksum: btoa(String(rawData.score) + rawData.timestamp)
+        checksum: utf8ToBase64(String(rawData.score) + rawData.timestamp)
       }),
     });
     
