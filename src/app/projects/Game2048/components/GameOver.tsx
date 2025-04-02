@@ -14,6 +14,7 @@ export default function GameOver({ score, onRestart, submitScore }: GameOverProp
   const [submitStatus, setSubmitStatus] = useState<{message: string, isError: boolean} | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   
   useEffect(() => {
     setIsClient(true);
@@ -39,13 +40,18 @@ export default function GameOver({ score, onRestart, submitScore }: GameOverProp
       setSubmitStatus(null);
       
       // 调用传入的提交函数
-      await submitScore(playerName || 'No Name');
+      const result = await submitScore(playerName || 'No Name');
       
       // 提交成功
       setSubmitStatus({
-        message: '分数上传成功！',
-        isError: false
+        message: result.message || '分数上传成功！',
+        isError: !result.success
       });
+      
+      // 如果上传成功，设置提交标志
+      if (result.success) {
+        setIsSubmitted(true);
+      }
       
     } catch (error) {
       console.error('提交分数时出错:', error);
@@ -86,6 +92,7 @@ export default function GameOver({ score, onRestart, submitScore }: GameOverProp
               placeholder="输入名字以上传分数"
               onChange={(e) => setPlayerName(e.target.value)}
               value={playerName}
+              disabled={isSubmitted}
             />
           </div>
         </div>
@@ -104,15 +111,22 @@ export default function GameOver({ score, onRestart, submitScore }: GameOverProp
           <button
             type="button"
             onClick={handleSubmitScore}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isSubmitted}
             className={`w-full text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center ${
-              isSubmitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+              isSubmitting || isSubmitted ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
             {isSubmitting ? (
               <>
                 <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
                 上传中...
+              </>
+            ) : isSubmitted ? (
+              <>
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
+                已上传
               </>
             ) : (
               <>
