@@ -5,11 +5,11 @@ import { useGame2048 } from './function/useGame2048';
 import GameBoard from './components/GameBoard';
 import GameStatus from './components/GameStatus';
 import GameOver from './components/GameOver';
-import GameRules from './components/GameRules';
 import GameSettings from './components/GameSettings';
 import GameRankings from './components/GameRankings';
+import CollapsibleGameRules from './components/CollapsibleGameRules';
+import EmbeddedRankings from './components/EmbeddedRankings';
 import { useEffect, useState } from 'react';
-
 
 export default function Game2048Page() {
   const {
@@ -68,7 +68,7 @@ export default function Game2048Page() {
             className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"
           >
             更多其他项目
-            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-5 h-5 ml-2" fill="currentColor" viewBox="0 0 20 20">
               <path 
                 fillRule="evenodd" 
                 d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
@@ -87,7 +87,7 @@ export default function Game2048Page() {
               <div className="lg:w-48 flex-shrink-0 space-y-3">
                 <GameSettings size={size} onSizeChange={onSizeChange} />
                 <GameStatus score={score} highScore={highScore} onRestart={onRestart} />
-                <GameRankings size={size} />
+                <CollapsibleGameRules />
               </div>
               
               {/* 游戏棋盘 */}
@@ -101,23 +101,11 @@ export default function Game2048Page() {
             )}
           </div>
           
-          {/* 右侧规则和信息区域 */}
+          {/* 右侧排行榜区域 */}
           <div className="lg:w-80 xl:w-96 bg-white rounded-xl shadow-md overflow-hidden">
-            <GameRules />
-            
-            <div className="hidden lg:block p-4 border-t border-gray-100">
-              <h3 className="text-base font-semibold mb-2 text-gray-800 flex items-center">
-                <svg className="w-4 h-4 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-                </svg>
-                小贴士
-              </h3>
-              <div className="space-y-1.5 text-gray-600 text-sm">
-                <p>• 尝试将大数字保持在一个角落</p>
-                <p>• 不要让小数字分散太远</p>
-                <p>• 提前规划你的移动路径</p>
-                <p>• 当你接近胜利时要格外小心</p>
-              </div>
+            <EmbeddedRankings size={size} />
+            <div className="hidden">
+              <GameRankings size={size} />
             </div>
           </div>
         </div>

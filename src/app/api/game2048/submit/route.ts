@@ -89,6 +89,13 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    if (decodedData.score % 4 !== 0) {
+      return NextResponse.json(
+        { success: false, message: '分数异常, 提交无效' },
+        { status: 400 }
+      );
+    }
     
     // 验证校验和
     const expectedChecksum = Buffer.from(String(decodedData.score) + decodedData.timestamp).toString('base64');

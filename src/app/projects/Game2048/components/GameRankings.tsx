@@ -15,6 +15,27 @@ export default function GameRankings({size = 4}) {
   const [rankings, setRankings] = useState<RankingItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
+  
+  // 客户端初始化
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  // 监听自定义事件打开排行榜
+  useEffect(() => {
+    if (!isClient) return;
+    
+    const handleOpenRankings = (event: CustomEvent) => {
+      openRankings();
+    };
+    
+    window.addEventListener('openGameRankings', handleOpenRankings as EventListener);
+    
+    return () => {
+      window.removeEventListener('openGameRankings', handleOpenRankings as EventListener);
+    };
+  }, [isClient]);
 
   // 获取排行榜数据
   const fetchRankings = async () => {
