@@ -253,7 +253,7 @@ export function useGame2048() {
       }));
       updateHighScore(newScore);
     }
-  }, [gameState.board, gameState.score, gameState.gameOver, updateHighScore]);
+  }, [gameState.board, gameState.score, gameState.gameOver, gameState.size, updateHighScore]);
 
   // 检查游戏是否结束
   const checkGameOver = (board: number[][]) => {
