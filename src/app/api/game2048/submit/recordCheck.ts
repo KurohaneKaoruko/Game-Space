@@ -59,7 +59,7 @@ export function recordCheck(size: number, score: number, record: GameRecordItem[
 
       // 当前求和与上一次的差值是否合理
       const diff = boardSum - oldBoardSum;
-      if (size < 8 && (diff % 2 !== 0 || diff > 16)) {
+      if (size < 8 && (diff % 2 !== 0 || diff > 8)) {
         return false;
       }
 

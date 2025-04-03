@@ -136,7 +136,14 @@ export function useGame2048() {
   const moveTiles = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
     if (gameState.gameOver) return;
 
-    const newBoard = JSON.parse(JSON.stringify(gameState.board));
+    // 使用深拷贝，但保留Infinity值
+    const newBoard = JSON.parse(
+      JSON.stringify(gameState.board, (key, value) => 
+        value === Infinity ? "Infinity" : value
+      )
+    ).map((row: any[]) => 
+      row.map((cell: any) => cell === "Infinity" ? Infinity : cell)
+    );
     let moved = false;
     let newScore = gameState.score;
 

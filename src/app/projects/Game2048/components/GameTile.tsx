@@ -109,7 +109,7 @@ export default function Tile({ value }: TileProps) {
     >
       {value !== 0 && (
         <p className="absolute">
-          {value > 131072 && !Number.isNaN(value) && Number.isFinite(value)
+          {value >= 1048576 && !Number.isNaN(value) && Number.isFinite(value)
             ? `2^${Math.log2(value)}`
             : value ?? "NaN"}
         </p>
