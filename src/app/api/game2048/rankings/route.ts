@@ -10,7 +10,6 @@ async function getRankings(size: number) {
     id: index + 1,
     name: item.playerName,
     score: item.score,
-    date: item.date,
   }));
 
   return formattedRankings

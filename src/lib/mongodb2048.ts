@@ -26,7 +26,6 @@ export async function getTopScores(size = 4, limit = 10) {
 async function saveScoreToMongoDB(scoreData: {
   playerName: string,
   score: number,
-  date: string,
   size: number,
   record: string
 }) {
@@ -53,9 +52,8 @@ async function saveScoreToMongoDB(scoreData: {
       const scoreRecord = {
         playerName: scoreData.playerName,
         score: scoreData.score,
-        date: scoreData.date,
         size: scoreData.size,
-        record: scoreData.record,
+        record: scoreData.record, // 游戏过程记录
         createdAt: new Date()
       };
 
@@ -75,7 +73,6 @@ async function saveScoreToMongoDB(scoreData: {
 export async function saveScore(scoreData: {
   playerName: string,
   score: number,
-  date: string,
   size: number,
   record: string
 }) {

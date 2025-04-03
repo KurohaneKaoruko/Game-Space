@@ -64,10 +64,10 @@ export async function POST(request: Request) {
     }
     
     // 获取解密后的数据
-    const { playerName, score, timestamp, gameSize } = decodedData;
+    const { playerName, score, gameSize } = decodedData;
     
     // 保存到数据库
-    const saveResult = await dataSave(playerName, score, timestamp, gameSize, JSON.stringify(gameRecordObj));
+    const saveResult = await dataSave(playerName, score, gameSize, JSON.stringify(gameRecordObj));
     
     return NextResponse.json({
       success: true,

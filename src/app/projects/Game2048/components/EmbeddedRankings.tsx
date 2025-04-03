@@ -7,7 +7,6 @@ type RankingItem = {
   id: number;
   name: string;
   score: number;
-  date: string;
 };
 
 export default function EmbeddedRankings({ size = 4 }) {
