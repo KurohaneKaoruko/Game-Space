@@ -1,6 +1,6 @@
 import { saveScore } from "@/lib/mongodb2048";
 
-export async function dataSave(playerName: string, score: number, timestamp: number, size: number) {
+export async function dataSave(playerName: string, score: number, timestamp: number, size: number, record: string) {
     const date = new Date(timestamp).toLocaleString('zh-CN', {
         year: 'numeric',
         month: '2-digit', 
@@ -12,7 +12,7 @@ export async function dataSave(playerName: string, score: number, timestamp: num
     });
   
     try {
-      return await saveScore({ playerName, score, date, size })
+      return await saveScore({ playerName, score, date, size, record })
     } catch (error) {
       console.error('保存分数失败:', error);
       return false;

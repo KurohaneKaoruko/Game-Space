@@ -2,13 +2,14 @@ import { MongoClient } from 'mongodb';
 
 const uri = process.env.MONGODB_URI || '';
 const client = uri ? new MongoClient(uri) : null;
+const getCollectionName = (size: number) => `scores_${size}x${size}`;
 
 export async function getTopScores(size = 4, limit = 10) {
   if (!client) return [];
   try {
     await client.connect();
     const database = client.db("game2048");
-    const collectionName = `scores_${size}x${size}`
+    const collectionName = getCollectionName(size);
     const collections = await database.listCollections({name: collectionName}).toArray();
     if (collections.length === 0) {
         await database.createCollection(collectionName);
@@ -26,7 +27,8 @@ async function saveScoreToMongoDB(scoreData: {
   playerName: string,
   score: number,
   date: string,
-  size: number
+  size: number,
+  record: string
 }) {
   if (!client) {
     throw new Error('MongoDB client is not initialized');
@@ -34,7 +36,7 @@ async function saveScoreToMongoDB(scoreData: {
   try {
     await client.connect();
     const database = client.db("game2048");
-    const collectionName = `scores_${scoreData.size}x${scoreData.size}`
+    const collectionName = getCollectionName(scoreData.size);
     const collections = await database.listCollections({name: collectionName}).toArray();
     if (collections.length === 0) {
         await database.createCollection(collectionName);
@@ -53,6 +55,7 @@ async function saveScoreToMongoDB(scoreData: {
         score: scoreData.score,
         date: scoreData.date,
         size: scoreData.size,
+        record: scoreData.record,
         createdAt: new Date()
       };
 
@@ -73,7 +76,8 @@ export async function saveScore(scoreData: {
   playerName: string,
   score: number,
   date: string,
-  size: number
+  size: number,
+  record: string
 }) {
   if (client) {
     return await saveScoreToMongoDB(scoreData);

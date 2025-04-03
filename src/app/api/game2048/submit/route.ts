@@ -7,7 +7,6 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { data, checksum } = body;
-    console.log('Received request with body size:', JSON.stringify(body).length);
     
     if (!data || !checksum) {
       return NextResponse.json(
@@ -36,6 +35,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (decodedData.score % 4 !== 0) {
+      return NextResponse.json(
+        { success: false, message: '无效的分数' },
+        { status: 400 }
+      );
+    }
+
     // 解析游戏记录 - 从Base64解码为JSON对象
     let gameRecordObj;
     try {
@@ -52,7 +58,7 @@ export async function POST(request: Request) {
     // 验证游戏记录
     if (!recordCheck(gameRecordObj)) {
       return NextResponse.json(
-        { success: false, message: '游戏过程未通过校验, 分数无效' },
+        { success: false, message: '无效的分数' },
         { status: 400 }
       );
     }
@@ -61,7 +67,7 @@ export async function POST(request: Request) {
     const { playerName, score, timestamp, gameSize } = decodedData;
     
     // 保存到数据库
-    const saveResult = await dataSave(playerName, score, timestamp, gameSize);
+    const saveResult = await dataSave(playerName, score, timestamp, gameSize, JSON.stringify(gameRecordObj));
     
     return NextResponse.json({
       success: true,
