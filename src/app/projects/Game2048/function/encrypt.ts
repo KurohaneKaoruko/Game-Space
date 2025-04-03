@@ -1,4 +1,4 @@
-export const EncryptData = async (data: {
+export const encryptData = async (data: {
   playerName: string;
   score: number;
   timestamp: number;

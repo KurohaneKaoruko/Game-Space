@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getSize, getHighScore } from './localData'
-import { EncryptData } from './encrypt';
+import { getValidSize, getGameSize, saveGameSize, getHighScore, saveHighScore } from './localData'
+import { submitScore } from './submitScore'
+import { sha256 } from 'js-sha256';
 
 interface GameState {
   board: number[][];
@@ -10,33 +11,11 @@ interface GameState {
   highScore: number;
 }
 
-const STORAGE_KEYS = {
-  SIZE: 'game2048_size',
-  HIGH_SCORE: 'game2048_high_score',
-  HIGH_SCORE_4: 'game2048_high_score',
-  HIGH_SCORE_5: 'game2048_high_score_5',
-  HIGH_SCORE_6: 'game2048_high_score_6',
-  HIGH_SCORE_7: 'game2048_high_score_7',
-  HIGH_SCORE_8: 'game2048_high_score_8'
-};
-
-// 确保大小是有效的数字
-const getValidSize = (size: number): number => {
-  return !isNaN(size) && size >= 4 && size <= 8 ? size : 4;
-};
-
-const initializeClientState = (): GameState => {
-  const size = getSize()
-  const highScore = getHighScore(size)
-  
-  return {
-    board: Array(size).fill(0).map(() => Array(size).fill(0)),
-    score: 0,
-    gameOver: false,
-    size,
-    highScore
-  };
-};
+// 定义游戏记录项的类型
+interface GameRecordItem {
+  board: string;
+  hash: string;
+}
 
 export function useGame2048() {
   const [gameState, setGameState] = useState<GameState>({
@@ -47,29 +26,38 @@ export function useGame2048() {
     highScore: 0
   });
 
-  useEffect(() => {
-    const clientState = initializeClientState();
-    addNewTile(clientState.board, clientState.size);
-    setGameState(clientState);
-  }, []);
+  const [gameRecord, setGameRecord] = useState<GameRecordItem[]>([])
+
+  // 计算游戏盘面的哈希值
+  const calculateBoardHash = (boardStr: string, prevRecord: GameRecordItem | null = null) => {
+    if (!prevRecord) {
+      // 初始记录，只用当前盘面计算
+      return sha256(boardStr);
+    }
+    // 使用上一个记录的完整信息和当前盘面计算
+    return sha256(JSON.stringify(prevRecord) + boardStr);
+  };
 
   // 初始化游戏
   const initGame = useCallback((size: number = 4) => {
     try {
       const validSize = getValidSize(size);
       const newBoard = Array(validSize).fill(0).map(() => Array(validSize).fill(0));
+      const highScore = getHighScore(validSize)
       
-      // 客户端存储操作
-      const savedHighScore = 
-        size === 4 ? localStorage.getItem(STORAGE_KEYS.HIGH_SCORE) :
-        size === 5 ? localStorage.getItem(STORAGE_KEYS.HIGH_SCORE_5) :
-        size === 6 ? localStorage.getItem(STORAGE_KEYS.HIGH_SCORE_6) :
-        size === 7 ? localStorage.getItem(STORAGE_KEYS.HIGH_SCORE_7) :
-        size === 8 ? localStorage.getItem(STORAGE_KEYS.HIGH_SCORE_8) :
-        0;
-      const highScore = savedHighScore ? parseInt(savedHighScore) : 0;
+      // 添加初始方块并获取其值
+      const initialTileValue = addNewTile(newBoard, validSize);
       
-      addNewTile(newBoard, validSize);
+      // 初始盘面记录，哈希值为空字符串
+      const boardStr = JSON.stringify(newBoard);
+      const initialHash = calculateBoardHash(boardStr);
+      setGameRecord([
+        {
+          board: boardStr,
+          hash: initialHash
+        }
+      ]);
+      
       setGameState({
         board: newBoard,
         score: 0,
@@ -82,18 +70,20 @@ export function useGame2048() {
     }
   }, []);
 
+  // 切换游戏大小
   const onSizeChange = useCallback((size: number = 4) => {
-    localStorage.setItem(STORAGE_KEYS.SIZE, size.toString());
+    saveGameSize(size);
     initGame(size);
   }, [initGame]);
 
+  // 重新开始游戏
   const onRestart = useCallback(() => {
-    const savedSize = localStorage.getItem(STORAGE_KEYS.SIZE);
-    const size = getValidSize(savedSize ? parseInt(savedSize) : 4);
+    const size = getGameSize();
     initGame(size);
   }, [initGame]);
 
-  const submitScore = useCallback(async (playerName: string = 'No Name') => {
+  // 提交分数
+  const onSubmitScore = useCallback(async (playerName: string = 'No Name') => {
     const score = gameState.score;
     const timestamp = Date.now();
     
@@ -102,52 +92,12 @@ export function useGame2048() {
       playerName: playerName || 'No Name',
       score,
       timestamp,
-      gameSize: gameState.size
+      gameSize: gameState.size,
+      gameRecord: btoa(JSON.stringify(gameRecord))
     };
 
-    try {
-      // 加密数据 - 因为EncryptData是异步函数，需要await
-      const encryptedData = await EncryptData(rawData);
-      
-      // 生成校验和 - 与服务端使用相同算法
-      const checksumData = String(rawData.score) + rawData.timestamp;
-      let checksum;
-      // 在浏览器环境中使用btoa
-      if (typeof window !== 'undefined') {
-        checksum = btoa(checksumData);
-      } else {
-        // 在Node.js环境中使用Buffer
-        checksum = Buffer.from(checksumData).toString('base64');
-      }
-      
-      // 发送加密后的数据
-      const response = await fetch('/api/game2048/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          data: encryptedData,
-          checksum
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`提交分数失败: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.message || '提交分数失败');
-      }
-      
-      return result;
-    } catch (error) {
-      console.error('提交分数错误:', error);
-      throw error;
-    }
-  }, [gameState.score, gameState.size]);
+    return await submitScore(rawData);
+  }, [gameState.score, gameState.size, gameRecord]);
 
   // 更新最高分
   const updateHighScore = useCallback((score: number) => {
@@ -157,17 +107,7 @@ export function useGame2048() {
         highScore: score
       }));
       const size = gameState.size;
-      if (size === 4) {
-        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE, score.toString());
-      } else if (size === 5) {
-        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE_5, score.toString());
-      } else if (size === 6) {
-        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE_6, score.toString());
-      } else if (size === 7) {
-        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE_7, score.toString());
-      } else if (size === 8) {
-        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE_8, score.toString());
-      }
+      saveHighScore(size, gameState.highScore)
     }
   }, [gameState.highScore, gameState.size]);
 
@@ -183,23 +123,26 @@ export function useGame2048() {
     }
     if (emptyCells.length > 0) {
       const { x, y } = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+      let tileValue = 0;
+      
       if (size <= 4) {
-        // 90% 9% 1%
-        board[x][y] = Math.random() < 0.9 ? 2 :
-                      Math.random() < 0.9 ? 4 : 8;
+        // 90% 10%
+        tileValue = Math.random() < 0.9 ? 2 : 4;
       } else if (size <= 6) {
-        // 70% 21% 6.3% 2.7%
-        board[x][y] = Math.random() < 0.7 ? 2 :
-                      Math.random() < 0.7 ? 4 :
-                      Math.random() < 0.7 ? 8 : 16;
+        // 70% 21% 9%
+        tileValue = Math.random() < 0.7 ? 2 :
+                    Math.random() < 0.7 ? 4 : 8;
       } else {
-        // 50% 25% 12.5% 6.25% 3.125%
-        board[x][y] = Math.random() < 0.5 ? 2 :
-                      Math.random() < 0.5 ? 4 :
-                      Math.random() < 0.5 ? 8 :
-                      Math.random() < 0.5 ? 16 : 32;
+        // 60% 24% 12.8% 3.2%
+        tileValue = Math.random() < 0.6 ? 2 :
+                    Math.random() < 0.6 ? 4 :
+                    Math.random() < 0.8 ? 8 : 16;
       }
+      
+      board[x][y] = tileValue;
+      return tileValue;
     }
+    return 0;
   };
 
   // 移动方块
@@ -260,8 +203,24 @@ export function useGame2048() {
     }
 
     if (moved) {
+      // 添加新方块并
       addNewTile(newBoard, gameState.size);
+      
       const isGameOver = checkGameOver(newBoard);
+      
+      // 记录游戏盘面
+      const boardStr = JSON.stringify(newBoard);
+      const prevRecord = gameRecord[gameRecord.length - 1];
+      const newHash = calculateBoardHash(boardStr, prevRecord);
+      
+      setGameRecord(prev => [
+        ...prev,
+        {
+          board: boardStr,
+          hash: newHash
+        }
+      ]);
+      
       setGameState(prev => ({
         board: newBoard,
         score: newScore,
@@ -271,7 +230,7 @@ export function useGame2048() {
       }));
       updateHighScore(newScore);
     }
-  }, [gameState.board, gameState.score, gameState.gameOver, gameState.size, updateHighScore]);
+  }, [gameState.board, gameState.score, gameState.gameOver, gameState.size, updateHighScore, gameRecord]);
 
   // 检查游戏是否结束
   const checkGameOver = (board: number[][]) => {
@@ -327,8 +286,7 @@ export function useGame2048() {
 
   // 初始化游戏
   useEffect(() => {
-    const savedSize = localStorage.getItem(STORAGE_KEYS.SIZE);
-    const size = getValidSize(savedSize ? parseInt(savedSize) : 4);
+    const size = getGameSize();
     initGame(size);
   }, [initGame]);
 
@@ -340,6 +298,6 @@ export function useGame2048() {
     highScore: gameState.highScore,
     onSizeChange,
     onRestart,
-    submitScore
+    onSubmitScore
   };
 }

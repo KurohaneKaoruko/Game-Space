@@ -5,10 +5,10 @@ import { useEffect, useState } from 'react';
 interface GameOverProps {
   score: number;
   onRestart: () => void;
-  submitScore: (playerName: string) => Promise<{ success: boolean; message: string }>;
+  onSubmitScore: (playerName: string) => Promise<{ success: boolean; message: string }>;
 }
 
-export default function GameOver({ score, onRestart, submitScore }: GameOverProps) {
+export default function GameOver({ score, onRestart, onSubmitScore }: GameOverProps) {
   const [isClient, setIsClient] = useState(false);
   const [playerName, setPlayerName] = useState("");
   const [submitStatus, setSubmitStatus] = useState<{message: string, isError: boolean} | null>(null);
@@ -40,7 +40,7 @@ export default function GameOver({ score, onRestart, submitScore }: GameOverProp
       setSubmitStatus(null);
       
       // 调用传入的提交函数
-      const result = await submitScore(playerName || 'No Name');
+      const result = await onSubmitScore(playerName || 'No Name');
       
       // 提交成功
       setSubmitStatus({

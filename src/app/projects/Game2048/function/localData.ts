@@ -8,15 +8,19 @@ const STORAGE_KEYS = {
 };
 
 // 确保大小是有效的数字
-const getValidSize = (size: number): number => {
+export const getValidSize = (size: number): number => {
     return !isNaN(size) && size >= 4 && size <= 8 ? size : 4;
 };
 
 // 获取本地存储的游戏网格大小
-export function getSize(): number {
+export function getGameSize(): number {
     const savedSize = localStorage.getItem(STORAGE_KEYS.SIZE);
     const size = getValidSize(savedSize ? parseInt(savedSize) : 4);
     return size;
+}
+
+export function saveGameSize(size: number) {
+    localStorage.setItem(STORAGE_KEYS.SIZE, size.toString());
 }
 
 // 获取本地存储的历史最高分
@@ -30,4 +34,18 @@ export function getHighScore(size: number): number {
         0;
     const highScore = savedHighScore === 'Infinity' ? Infinity : savedHighScore ? parseInt(savedHighScore) : 0;
     return highScore;
+}
+
+export function saveHighScore(size: number, score: number) {
+    if (size === 4) {
+        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE_4, score.toString());
+    } else if (size === 5) {
+        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE_5, score.toString());
+    } else if (size === 6) {
+        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE_6, score.toString());
+    } else if (size === 7) {
+        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE_7, score.toString());
+    } else if (size === 8) {
+        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE_8, score.toString());
+    }
 }

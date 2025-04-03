@@ -1,9 +1,10 @@
 import { MongoClient } from 'mongodb';
 
 const uri = process.env.MONGODB_URI || '';
-const client = new MongoClient(uri);
+const client = uri ? new MongoClient(uri) : null;
 
 export async function getTopScores(size = 4, limit = 10) {
+  if (!client) return [];
   try {
     await client.connect();
     const database = client.db("game2048");
@@ -20,12 +21,16 @@ export async function getTopScores(size = 4, limit = 10) {
   }
 }
 
-export async function insertScore(scoreData: {
+
+async function saveScoreToMongoDB(scoreData: {
   playerName: string,
   score: number,
   date: string,
   size: number
 }) {
+  if (!client) {
+    throw new Error('MongoDB client is not initialized');
+  }
   try {
     await client.connect();
     const database = client.db("game2048");
@@ -60,5 +65,19 @@ export async function insertScore(scoreData: {
     }
   } finally {
     await client.close();
+    return true;
+  }
+}
+
+export async function saveScore(scoreData: {
+  playerName: string,
+  score: number,
+  date: string,
+  size: number
+}) {
+  if (client) {
+    return await saveScoreToMongoDB(scoreData);
+  } else {
+    console.error('未配置MongoDB连接');
   }
 }

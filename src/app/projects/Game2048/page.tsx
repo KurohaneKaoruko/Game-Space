@@ -19,7 +19,7 @@ export default function Game2048Page() {
     highScore,
     onSizeChange,
     onRestart,
-    submitScore,
+    onSubmitScore,
   } = useGame2048();
 
   const [isMobile, setIsMobile] = useState(true);
@@ -95,7 +95,7 @@ export default function Game2048Page() {
             </div>
             
             {gameOver && (
-              <GameOver score={score} onRestart={onRestart} submitScore={submitScore}/>
+              <GameOver score={score} onRestart={onRestart} onSubmitScore={onSubmitScore}/>
             )}
           </div>
           
