@@ -141,8 +141,8 @@ export function useGame2048() {
       JSON.stringify(gameState.board, (key, value) => 
         value === Infinity ? "Infinity" : value
       )
-    ).map((row: number[]) => 
-      row.map((cell: number) => cell === "Infinity" ? Infinity : cell)
+    ).map((row: string[]) => 
+      row.map((cell: string) => cell === "Infinity" ? Infinity : cell)
     );
     let moved = false;
     let newScore = gameState.score;
