@@ -1,10 +1,12 @@
+import { sha256 } from 'js-sha256';
+
 export const encryptData = async (data: {
   playerName: string;
   score: number;
   timestamp: number;
   gameSize: number;
 }) => {
-  const secretKey = process.env.NEXT_PUBLIC_GAME_2048_SUBMIT_KEY;
+  const secretKey = sha256(process.env.NEXT_PUBLIC_GAME_2048_SUBMIT_KEY ?? '');
   if (!secretKey || secretKey.length < 32) {
     throw new Error("Encryption key must be at least 32 characters long");
   }

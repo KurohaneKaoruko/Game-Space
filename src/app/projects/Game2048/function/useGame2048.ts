@@ -45,8 +45,8 @@ export function useGame2048() {
       const newBoard = Array(validSize).fill(0).map(() => Array(validSize).fill(0));
       const highScore = getHighScore(validSize)
       
-      // 添加初始方块并获取其值
-      const initialTileValue = addNewTile(newBoard, validSize);
+      // 添加初始方块
+      addNewTile(newBoard, validSize);
       
       // 初始盘面记录，哈希值为空字符串
       const boardStr = JSON.stringify(newBoard);

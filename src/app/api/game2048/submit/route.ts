@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     // 解密数据
     const decodedData = decryptData(data);
     
-    if (!decodedData) {
+    if (!decodedData || !decodedData.playerName || !decodedData.score || !decodedData.timestamp) {
       return NextResponse.json(
         { success: false, message: '数据解密失败' },
         { status: 400 }

@@ -1,15 +1,11 @@
 const STORAGE_KEYS = {
     SIZE: 'game2048_size',
-    HIGH_SCORE_4: 'game2048_high_score_4',
-    HIGH_SCORE_5: 'game2048_high_score_5',
-    HIGH_SCORE_6: 'game2048_high_score_6',
-    HIGH_SCORE_7: 'game2048_high_score_7',
-    HIGH_SCORE_8: 'game2048_high_score_8'
+    HIGH_SCORE: (size) => `game2048_high_score_${size}`
 };
 
 // 确保大小是有效的数字
 export const getValidSize = (size: number): number => {
-    return !isNaN(size) && size >= 4 && size <= 8 ? size : 4;
+    return !isNaN(size) && size >= 2 && size <= 8 ? size : 4;
 };
 
 // 获取本地存储的游戏网格大小
@@ -25,27 +21,11 @@ export function saveGameSize(size: number) {
 
 // 获取本地存储的历史最高分
 export function getHighScore(size: number): number {
-    const savedHighScore = 
-        size === 4 ? localStorage.getItem(STORAGE_KEYS.HIGH_SCORE_4) :
-        size === 5 ? localStorage.getItem(STORAGE_KEYS.HIGH_SCORE_5) :
-        size === 6 ? localStorage.getItem(STORAGE_KEYS.HIGH_SCORE_6) :
-        size === 7 ? localStorage.getItem(STORAGE_KEYS.HIGH_SCORE_7) :
-        size === 8 ? localStorage.getItem(STORAGE_KEYS.HIGH_SCORE_8) :
-        0;
+    const savedHighScore = localStorage.getItem(STORAGE_KEYS.HIGH_SCORE(size)) ?? 0;
     const highScore = savedHighScore === 'Infinity' ? Infinity : savedHighScore ? parseInt(savedHighScore) : 0;
     return highScore;
 }
 
 export function saveHighScore(size: number, score: number) {
-    if (size === 4) {
-        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE_4, score.toString());
-    } else if (size === 5) {
-        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE_5, score.toString());
-    } else if (size === 6) {
-        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE_6, score.toString());
-    } else if (size === 7) {
-        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE_7, score.toString());
-    } else if (size === 8) {
-        localStorage.setItem(STORAGE_KEYS.HIGH_SCORE_8, score.toString());
-    }
+    localStorage.setItem(STORAGE_KEYS.HIGH_SCORE(size), score.toString());
 }

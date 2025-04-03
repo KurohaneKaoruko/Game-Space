@@ -1,0 +1,15 @@
+.game-grid {
+  display: grid;
+  gap: 0.5rem;
+  height: 100%;
+  width: 100%;
+}
+
+@for $i from 2 through 8 {
+  .game-grid[data-size="#{$i}"] {
+    grid-template-columns: repeat($i, 1fr);
+    @if $i >= 7 {
+      gap: 0.2rem;
+    }
+  }
+}

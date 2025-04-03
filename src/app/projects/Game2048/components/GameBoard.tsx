@@ -2,7 +2,7 @@
 
 import GameTile from './GameTile';
 import { useEffect, useState } from 'react';
-import '../styles/GameBoard.css';
+import '../styles/GameBoard.scss';
 
 interface GameBoardProps {
   board: number[][];
