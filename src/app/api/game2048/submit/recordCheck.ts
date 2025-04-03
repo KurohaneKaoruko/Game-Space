@@ -1,10 +1,5 @@
 import { createHash } from 'crypto';
 
-interface GameRecord {
-    moves: string[];
-    tiles: { x: number, y: number, value: number }[];
-  }
-
 interface GameRecordItem {
   board: string;
   hash: string;
@@ -21,7 +16,7 @@ function calculateBoardHash(boardStr: string, prevRecord: GameRecordItem | null 
 }
 
 // 验证游戏记录的正确性
-export function recordCheck(score: number, size: number, record: any) {
+export function recordCheck(record: any) {
   // 验证基本游戏记录
   if (!Array.isArray(record)) {
     return false;

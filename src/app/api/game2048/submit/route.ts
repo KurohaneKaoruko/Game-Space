@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     }
 
     // 验证游戏记录
-    if (!recordCheck(decodedData.score, decodedData.size, gameRecordObj)) {
+    if (!recordCheck(gameRecordObj)) {
       return NextResponse.json(
         { success: false, message: '游戏过程未通过校验, 分数无效' },
         { status: 400 }
