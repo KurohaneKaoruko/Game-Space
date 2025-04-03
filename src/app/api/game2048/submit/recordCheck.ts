@@ -17,7 +17,7 @@ function calculateBoardHash(prevRecord: GameRecordItem | null = null) {
 }
 
 // 验证游戏记录的正确性
-export function recordCheck(score: number, record: GameRecordItem[]) {
+export function recordCheck(size: number, score: number, record: GameRecordItem[]) {
   // 验证基本游戏记录
   if (!Array.isArray(record)) {
     return false;
@@ -59,7 +59,7 @@ export function recordCheck(score: number, record: GameRecordItem[]) {
 
       // 当前求和与上一次的差值是否合理
       const diff = boardSum - oldBoardSum;
-      if (diff % 2 !== 0 || diff > 16) {
+      if (size < 8 && (diff % 2 !== 0 || diff > 16)) {
         return false;
       }
 

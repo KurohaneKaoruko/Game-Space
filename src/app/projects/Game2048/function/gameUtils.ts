@@ -45,10 +45,10 @@ export const generateRandomTileNumber = (size: number) => {
   if (size <= 4) {
     // 90% 10%
     return Math.random() < 0.9 ? 2 : 4;
-  } else if (size <= 6) {
+  } else if (size <= 7) {
     // 70% 21% 9%
     return Math.random() < 0.7 ? 2 :
-                Math.random() < 0.7 ? 4 : 8;
+           Math.random() < 0.7 ? 4 : 8;
   } else {
     const maxNum = 65536
     const f = (p:  number, n: number) => {

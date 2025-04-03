@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     }
 
     // 验证游戏记录
-    if (!recordCheck(decodedData.score, gameRecordObj)) {
+    if (!recordCheck(decodedData.gameSize, decodedData.score, gameRecordObj)) {
       return NextResponse.json(
         { success: false, message: '无效的分数' },
         { status: 400 }
