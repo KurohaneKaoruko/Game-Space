@@ -32,6 +32,9 @@ export function recordCheck(size: number, score: number, record: GameRecordItem[
 
     let oldBoardSum = 0;
     let realScore = 0;
+    let diff_2 = 0;
+    let diff_4 = 0;
+    let diff_8 = 0;
 
     // 验证哈希链
     for (let i = 0; i < record.length; i++) {
@@ -62,6 +65,18 @@ export function recordCheck(size: number, score: number, record: GameRecordItem[
       if (size < 8 && (diff % 2 !== 0 || diff > 8)) {
         return false;
       }
+      // 2*2不会新增4以上的数字
+      if (size == 2 && diff > 4) {
+        return false;
+      }
+
+      if (diff === 2) {
+        diff_2++;
+      } else if (diff === 4) {
+        diff_4++;
+      } else if (diff === 8) {
+        diff_8++;
+      }
 
       oldBoardSum = boardSum;
       realScore += addscore;
@@ -70,6 +85,16 @@ export function recordCheck(size: number, score: number, record: GameRecordItem[
     // 校验分数真实性
     if (realScore !== score) {
       return false;
+    }
+
+    if (record.length >= 20) {
+      // 20步后，4和8的数量不能超过2的数量
+      // 避免修改前端代码导致的异常分数
+      if (diff_4 > diff_2 ||
+          diff_8 > diff_4 ||
+          diff_8 > diff_2) {
+        return false;
+      }
     }
     
     return true;
