@@ -50,11 +50,6 @@ export function generateRandomTileNumber(size: number) {
     return Math.random() < 0.7 ? 2 :
            Math.random() < 0.7 ? 4 : 8;
   } else {
-    const maxNum = 2 ** 1023
-    const f = (p:  number, n: number) => {
-      if (n >= maxNum || Math.random() < p) return n;
-      return f(p, n * 2);
-    }
-    return f(0.4, 64);
+    return (Math.random() < 0.9 ? 2 : 4) * 1024;
   }
 }
