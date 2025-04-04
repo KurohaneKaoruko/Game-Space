@@ -2,10 +2,23 @@ import { NextResponse } from "next/server";
 import { recordCheck } from "./recordCheck";
 import { decryptData } from "./decryptData";
 import { getTimesalt, dataSave } from "./utils";
-
+import { sha256 } from "js-sha256";
 
 export async function GET() {
-  return NextResponse.json({ message: getTimesalt() });
+  const s = sha256(String(Math.floor(new Date().getTime() / 300001)));
+  return NextResponse.json({
+    token: sha256(s + '伪信息 token'),
+    key: sha256(s + '伪信息 key'),
+    salt: sha256(s + '伪信息 salt'),
+    secret: sha256(s + '伪信息 secret'),
+    header: sha256(s + '伪信息 header'),
+    body: sha256(s + '伪信息 body'),
+    timesalt: sha256(s + '伪信息 timesalt'),
+    submitkey: sha256(s + '伪信息 submitkey'),
+    secretkey: sha256(s + '伪信息 secretkey'),
+    timestamp: sha256(s + '伪信息 timestamp'),
+    message: getTimesalt()
+  });
 }
   
 
