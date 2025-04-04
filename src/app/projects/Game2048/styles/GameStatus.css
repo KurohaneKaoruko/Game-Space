@@ -7,11 +7,25 @@
 @media (max-width: 1024px) {
     .score-box {
         flex-direction: row;
-        gap: 10;
+        gap: 10px;
     }
     .score-box > * {
         flex: 1 1 0%;
         min-width: 0;
         box-sizing: border-box;
+    }
+    
+    /* 移动端下更紧凑的边距 */
+    .score-box > div {
+        padding: 8px;
+    }
+    
+    /* 移动端下更小的文字尺寸 */
+    .score-box .text-xs {
+        font-size: 0.65rem;
+    }
+    
+    .score-box .text-xl {
+        font-size: 1rem;
     }
 }

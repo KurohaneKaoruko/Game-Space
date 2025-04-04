@@ -16,20 +16,33 @@ export default function GameSettings({ size, onSizeChange }: GameSettingsProps) 
   
   if (!isClient) return null;
   
+  // 定义可选的棋盘大小
+  const sizeOptions = [2, 4, 6, 8];
+  
   return (
     <div className="bg-white rounded-lg p-3 shadow-sm mb-4">
       <h3 className="text-sm font-medium text-gray-900 mb-2">游戏网格大小</h3>
-      <select
-        value={size}
-        onChange={(e) => onSizeChange(Number(e.target.value))}
-        aria-label="选择大小"
-        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-      >
-        <option value={2}>2 × 2</option>
-        <option value={4}>4 × 4</option>
-        <option value={6}>6 × 6</option>
-        <option value={8}>8 × 8</option>
-      </select>
+      <div className="grid grid-cols-4 gap-1">
+        {sizeOptions.map((sizeOption) => {
+          const isSelected = size === sizeOption;
+          return (
+            <button
+              key={sizeOption}
+              type="button"
+              onClick={() => onSizeChange(sizeOption)}
+              className={`
+                py-1 px-2 text-center text-sm rounded-md transition-colors duration-200 border
+                ${isSelected
+                  ? 'bg-blue-100 border-blue-400 text-blue-800 font-medium' 
+                  : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                }
+              `}
+            >
+              {sizeOption}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 } 

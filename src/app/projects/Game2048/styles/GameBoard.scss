@@ -3,6 +3,10 @@
   gap: 0.5rem;
   height: 100%;
   width: 100%;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 @for $i from 2 through 8 {
@@ -12,4 +16,11 @@
       gap: 0.2rem;
     }
   }
+}
+
+#game-board {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
