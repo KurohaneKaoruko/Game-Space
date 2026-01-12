@@ -43,6 +43,4 @@ next-env.d.ts
 
 .*/
 
-tools/game2048-trainer/checkpoint.json
-tools/game2048-trainer/weights.json
-public/2048data/weights.json
+__pycache__
