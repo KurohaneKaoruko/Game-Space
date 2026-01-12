@@ -148,6 +148,7 @@ export function createInitialState(size: number, highScore: number = 0): GameSta
     tiles: boardToTiles(board),
     score: 0,
     gameOver: false,
+    showGameOver: false,
     size: validSize,
     highScore,
   };
@@ -539,11 +540,14 @@ export function move(state: GameState, direction: Direction): MoveResult {
     }
   }
   
+  const isGameOverNow = isGameOver(newBoard);
+  
   const newState: GameState = {
     board: newBoard,
     tiles,
     score: newScore,
-    gameOver: isGameOver(newBoard),
+    gameOver: isGameOverNow,
+    showGameOver: isGameOverNow,
     size,
     highScore: newHighScore,
   };

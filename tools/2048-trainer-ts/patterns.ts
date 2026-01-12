@@ -96,9 +96,10 @@ export const ROW_COL_4TUPLE_PATTERNS: Pattern[] = [
 
 /**
  * 默认训练模式
- * 使用标准6-tuple模式，为2048游戏AI提供良好的特征覆盖和训练效果
+ * 使用4-tuple行列模式，大幅减少权重文件大小（从512MB降至约2MB）
+ * 包含4条水平线和4条垂直线，覆盖棋盘所有行列
  */
-export const DEFAULT_TRAINING_PATTERNS: Pattern[] = STANDARD_6TUPLE_PATTERNS;
+export const DEFAULT_TRAINING_PATTERNS: Pattern[] = ROW_COL_4TUPLE_PATTERNS;
 
 /**
  * 计算给定元组大小的查找表大小

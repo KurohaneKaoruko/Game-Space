@@ -77,6 +77,8 @@ export interface GameState {
   score: number;
   /** 游戏是否结束 */
   gameOver: boolean;
+  /** 是否显示游戏结束弹窗 */
+  showGameOver: boolean;
   /** 棋盘大小 (2-8) */
   size: number;
   /** 历史最高分 */
@@ -115,6 +117,8 @@ export interface SerializedGameState {
   highScore: number;
   /** 保存时间戳 */
   timestamp: number;
+  /** 是否显示游戏结束弹窗 */
+  showGameOver?: boolean;
 }
 
 /**

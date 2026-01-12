@@ -99,12 +99,12 @@ const CORNER_6TUPLE: TuplePattern[] = [
 
 /**
  * 默认元组模式配置
+ * 使用4-tuple行列模式，大幅减少权重文件大小（从512MB降至约2MB）
+ * 包含4条水平线和4条垂直线，覆盖棋盘所有行列
  */
 export const DEFAULT_PATTERNS: TuplePattern[] = [
   ...HORIZONTAL_4TUPLE,
   ...VERTICAL_4TUPLE,
-  ...RECTANGLE_6TUPLE,
-  ...CORNER_6TUPLE,
 ];
 
 /**

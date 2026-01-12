@@ -64,6 +64,10 @@ interface UseGame2048Return {
   moveTiles: (direction: Direction) => void;
   /** 直接执行移动（跳过动画检查，供AI极速模式使用） */
   moveImmediate: (direction: Direction) => void;
+  /** 是否显示游戏结束弹窗 */
+  showGameOver: boolean;
+  /** 关闭游戏结束弹窗 */
+  onCloseGameOver: () => void;
 }
 
 /**
@@ -86,6 +90,7 @@ export function useGame2048(): UseGame2048Return {
     tiles: [],
     score: 0,
     gameOver: false,
+    showGameOver: false,
     size: 4,
     highScore: 0
   });
@@ -173,6 +178,22 @@ export function useGame2048(): UseGame2048Return {
   }, [initGame, clearHistory]);
 
   /**
+   * 关闭游戏结束弹窗
+   * 不重新开始游戏，只是隐藏弹窗
+   */
+  const onCloseGameOver = useCallback(() => {
+    setGameState(prev => ({
+      ...prev,
+      showGameOver: false,
+    }));
+    // 保存状态到localStorage
+    saveGameState({
+      ...gameState,
+      showGameOver: false,
+    });
+  }, [gameState]);
+
+  /**
    * 撤销上一步操作
    * 
    * Requirements: 3.2, 3.3
@@ -188,6 +209,7 @@ export function useGame2048(): UseGame2048Return {
         tiles: boardToTiles(previousEntry.board),
         score: previousEntry.score,
         gameOver: false, // 撤销后游戏不应该结束
+        showGameOver: false,
         size: gameState.size,
         highScore: gameState.highScore,
       };
@@ -342,6 +364,7 @@ export function useGame2048(): UseGame2048Return {
     tiles: gameState.tiles as AnimatedTile[],
     score: gameState.score,
     gameOver: gameState.gameOver,
+    showGameOver: gameState.showGameOver,
     size: gameState.size,
     highScore: gameState.highScore,
     canUndo,
@@ -352,6 +375,7 @@ export function useGame2048(): UseGame2048Return {
     onUndo,
     moveTiles,
     moveImmediate,
+    onCloseGameOver,
   };
 }
 

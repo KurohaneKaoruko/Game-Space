@@ -75,6 +75,7 @@ export function saveGameState(state: GameState): void {
       size: state.size,
       highScore: state.highScore,
       timestamp: Date.now(),
+      showGameOver: state.showGameOver,
     };
     
     localStorage.setItem(STORAGE_KEY, JSON.stringify(serialized));
@@ -149,6 +150,7 @@ export function loadGameState(): GameState | null {
       tiles: boardToTiles(serialized.board),
       score: serialized.score,
       gameOver: isGameOver(serialized.board),
+      showGameOver: serialized.showGameOver ?? isGameOver(serialized.board),
       size: serialized.size,
       highScore: serialized.highScore,
     };

@@ -5,9 +5,10 @@ import { useEffect, useState } from 'react';
 interface GameOverProps {
   score: number;
   onRestart: () => void;
+  onClose: () => void;
 }
 
-export default function GameOver({ score, onRestart }: GameOverProps) {
+export default function GameOver({ score, onRestart, onClose }: GameOverProps) {
   const [isClient, setIsClient] = useState(false);
   
   useEffect(() => {
@@ -39,6 +40,12 @@ export default function GameOver({ score, onRestart }: GameOverProps) {
             className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md transition-colors duration-200"
           >
             重新开始
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 px-4 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg shadow-md transition-colors duration-200"
+          >
+            关闭
           </button>
         </div>
       </div>

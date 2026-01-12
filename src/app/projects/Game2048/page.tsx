@@ -15,6 +15,7 @@ export default function Game2048Page() {
     tiles,
     score,
     gameOver,
+    showGameOver,
     size,
     highScore,
     canUndo,
@@ -25,6 +26,7 @@ export default function Game2048Page() {
     onUndo,
     moveTiles,
     moveImmediate,
+    onCloseGameOver,
   } = useGame2048();
 
   const [isMobile, setIsMobile] = useState(true);
@@ -127,8 +129,8 @@ export default function Game2048Page() {
               </div>
             )}
             
-            {gameOver && (
-              <GameOver score={score} onRestart={onRestart}/>
+            {showGameOver && (
+              <GameOver score={score} onRestart={onRestart} onClose={onCloseGameOver}/>
             )}
           </div>
           
