@@ -87,25 +87,60 @@ export default function Page() {
 
             <div className="bg-white rounded-xl shadow-md overflow-hidden p-3">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <ScoreBox title="指数偏置源 b" value={baseText} tone="blue" sub={`Lv.${state?.bLevel ?? 0} · 影响 b`} />
-                <ScoreBox title="指数率 r" value={rText} tone="purple" sub={`Lv.${state?.rLevel ?? 0} · 影响 rate`} />
-                <ScoreBox title="倍率 m" value={`${formatScalar(multiplierFromLevel(state?.multiplierLevel ?? 0), 2, 3)}×`} tone="gray" sub={`Lv.${state?.multiplierLevel ?? 0}`} />
+                <ScoreBox title="指数偏置源 b" value={baseText} tone="blue" sub="影响：b（指数偏置）" />
+                <ScoreBox title="指数率 r" value={rText} tone="purple" sub="影响：rate（指数率）" />
+                <ScoreBox title="倍率 m" value={`${formatScalar(multiplierFromLevel(state?.multiplierLevel ?? 0), 2, 3)}×`} tone="gray" sub="影响：b_eff（放大）" />
                 <ScoreBox title="有效 b_eff" value={effectiveBase ? bnFormat(effectiveBase, 4) : '...'} tone="gray" sub="用于计算 b 与 rate" />
               </div>
             </div>
           </div>
 
-          <aside className="lg:w-72 xl:w-80 bg-white rounded-xl shadow-md overflow-hidden p-3 mt-3 lg:mt-0">
+          <aside className="lg:w-72 xl:w-80 bg-white rounded-xl shadow-md overflow-hidden p-2 mt-3 lg:mt-0">
             <div className="flex items-center justify-between">
               <h2 className="font-bold text-gray-800 text-lg">升级</h2>
             </div>
 
-            <div className="mt-3 space-y-3">
-              <UpgradeCard title="提升 b" formula="b_eff ↑ ⇒ b ↑（指数偏置）" cost={bnFormat(costs.base, 4)} disabled={!affordableBase} onBuy={buyBase} />
-              <UpgradeCard title="提升 r" formula="r ↑ ⇒ rate ↑（指数率）" cost={bnFormat(costs.r, 4)} disabled={!affordableR} onBuy={buyR} />
-              <UpgradeCard title="提升 m" formula="m ↑ ⇒ b_eff ↑ ⇒ b ↑" cost={bnFormat(costs.multiplier, 4)} disabled={!affordableMultiplier} onBuy={buyMultiplier} />
-              <UpgradeCard title="曲率：b" formula="b 的增长斜率 ↑（影响 b_eff）" cost={bnFormat(costs.bCurve, 4)} disabled={!affordableBCurve} onBuy={buyBCurve} />
-              <UpgradeCard title="曲率：r" formula="r 的增长斜率 ↑（影响 rate）" cost={bnFormat(costs.rCurve, 4)} disabled={!affordableRCurve} onBuy={buyRCurve} />
+            <div className="mt-3 space-y-2">
+              <UpgradeCard
+                title="提升 b"
+                affects="影响：b（指数偏置）"
+                formula="提升 b_eff（来源强度）"
+                cost={bnFormat(costs.base, 4)}
+                disabled={!affordableBase}
+                onBuy={buyBase}
+              />
+              <UpgradeCard
+                title="提升 r"
+                affects="影响：rate（指数率）"
+                formula="提高 r（用于计算 rate）"
+                cost={bnFormat(costs.r, 4)}
+                disabled={!affordableR}
+                onBuy={buyR}
+              />
+              <UpgradeCard
+                title="提升 m"
+                affects="影响：b_eff → b"
+                formula="放大 b_eff（倍率）"
+                cost={bnFormat(costs.multiplier, 4)}
+                disabled={!affordableMultiplier}
+                onBuy={buyMultiplier}
+              />
+              <UpgradeCard
+                title="曲率 b"
+                affects="影响：b_eff 增长斜率"
+                formula="让提升 b 更“陡”"
+                cost={bnFormat(costs.bCurve, 4)}
+                disabled={!affordableBCurve}
+                onBuy={buyBCurve}
+              />
+              <UpgradeCard
+                title="曲率 r"
+                affects="影响：rate 增长斜率"
+                formula="让提升 r 更“陡”"
+                cost={bnFormat(costs.rCurve, 4)}
+                disabled={!affordableRCurve}
+                onBuy={buyRCurve}
+              />
             </div>
 
             <div className="mt-3 rounded-xl bg-gray-50 border border-gray-200 p-3">
@@ -186,29 +221,32 @@ function ScoreBox(props: { title: string; value: string; sub: string; tone: 'blu
   );
 }
 
-function UpgradeCard(props: { title: string; formula: string; cost: string; disabled: boolean; onBuy: () => void }) {
+function UpgradeCard(props: { title: string; affects: string; formula: string; cost: string; disabled: boolean; onBuy: () => void }) {
   return (
-    <div className="rounded-xl bg-gray-50 border border-gray-200 p-3">
+    <div className="rounded-xl bg-gray-50 border border-gray-200 px-3 py-2">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="font-semibold text-gray-900">{props.title}</div>
-          <div className="mt-1 text-xs text-gray-500 font-mono truncate">{props.formula}</div>
-          <div className="mt-2 text-sm text-gray-700">
+          <div className="font-semibold text-gray-900 whitespace-nowrap">{props.title}</div>
+          <div className="mt-1 text-[11px] text-gray-600 leading-snug break-words">{props.affects}</div>
+          <div className="mt-0.5 text-[11px] text-gray-500 font-mono leading-snug break-words">{props.formula}</div>
+        </div>
+        <div className="shrink-0 flex flex-col items-end gap-1">
+          <div className="text-[11px] text-gray-700 whitespace-nowrap">
             代价 <span className="font-mono">{props.cost}</span>
           </div>
+          <button
+            type="button"
+            onClick={props.onBuy}
+            disabled={props.disabled}
+            className={`
+              py-1.5 px-3 rounded-lg font-medium text-sm transition-colors 
+              justify-center flex items-center whitespace-nowrap
+              ${props.disabled ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gray-900 hover:bg-gray-800 text-white'}
+            `}
+          >
+            购买
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={props.onBuy}
-          disabled={props.disabled}
-          className={`
-            py-2 px-4 rounded-lg font-medium text-sm transition-colors 
-            justify-center flex items-center whitespace-nowrap
-            ${props.disabled ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gray-900 hover:bg-gray-800 text-white'}
-          `}
-        >
-          购买
-        </button>
       </div>
     </div>
   );
