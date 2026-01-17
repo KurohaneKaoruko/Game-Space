@@ -16,4 +16,12 @@ export const games: Project[] = [
     technologies: ['React', 'TypeScript', 'Next.js', 'Tailwind CSS'],
     link: '/games/Game2048'
   },
+  {
+    id: 'FunctionIdle',
+    title: '函数 · 指数挂机',
+    description: '以微分方程 dP/dt = r·P + b 为核心的指数增长挂机游戏，支持本地存档与离线结算。',
+    image: '/images/function-idle.svg',
+    technologies: ['React', 'TypeScript', 'Next.js', 'Tailwind CSS'],
+    link: '/games/FunctionIdle'
+  },
 ]; 
