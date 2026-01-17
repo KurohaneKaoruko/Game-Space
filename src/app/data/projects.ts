@@ -19,7 +19,7 @@ export const games: Project[] = [
   {
     id: 'FunctionIdle',
     title: '函数 · 指数挂机',
-    description: '以微分方程 dP/dt = r·P + b 为核心的指数增长挂机游戏，支持本地存档与离线结算。',
+    description: '指数增长主题的挂机小游戏：升级参数提升增长速度，支持本地存档与离线结算，并提供增长曲线可视化。',
     image: '/images/function-idle.svg',
     technologies: ['React', 'TypeScript', 'Next.js', 'Tailwind CSS'],
     link: '/games/FunctionIdle'

@@ -25,9 +25,9 @@ function formatTimeAgo(msAgo: number): string {
 }
 
 export function GrowthChart(props: { points: GrowthPoint[]; now: number; windowMs: number; height?: number }) {
-  const height = props.height ?? 220;
-  const width = 820;
-  const padding = { l: 52, r: 18, t: 14, b: 30 };
+  const height = props.height ?? 420;
+  const width = 1200;
+  const padding = { l: 16, r: 12, t: 14, b: 14 };
   const innerW = width - padding.l - padding.r;
   const innerH = height - padding.t - padding.b;
 
@@ -78,6 +78,26 @@ export function GrowthChart(props: { points: GrowthPoint[]; now: number; windowM
     return d;
   }, [filtered, props.now, props.windowMs, domain.yMin, domain.yMax, innerW, innerH, padding.l, padding.t]);
 
+  const areaD = useMemo(() => {
+    if (filtered.length === 0) return '';
+    const start = props.now - props.windowMs;
+    const xOf = (t: number) => padding.l + ((t - start) / props.windowMs) * innerW;
+    const yOf = (y: number) => padding.t + (1 - (y - domain.yMin) / (domain.yMax - domain.yMin)) * innerH;
+    const yBottom = padding.t + innerH;
+
+    let d = '';
+    for (let i = 0; i < filtered.length; i++) {
+      const p = filtered[i];
+      const x = xOf(p.t);
+      const y = yOf(p.y);
+      d += i === 0 ? `M ${x.toFixed(2)} ${y.toFixed(2)}` : ` L ${x.toFixed(2)} ${y.toFixed(2)}`;
+    }
+    const firstX = xOf(filtered[0].t);
+    const lastX = xOf(filtered[filtered.length - 1].t);
+    d += ` L ${lastX.toFixed(2)} ${yBottom.toFixed(2)} L ${firstX.toFixed(2)} ${yBottom.toFixed(2)} Z`;
+    return d;
+  }, [filtered, props.now, props.windowMs, domain.yMin, domain.yMax, innerW, innerH, padding.l, padding.t]);
+
   const hover = useMemo(() => {
     if (hoverX === null) return null;
     if (filtered.length === 0) return null;
@@ -92,97 +112,105 @@ export function GrowthChart(props: { points: GrowthPoint[]; now: number; windowM
 
   const yTicks = useMemo(() => {
     const ticks = 4;
-    const list: { y: number; label: string }[] = [];
+    const list: { y: number }[] = [];
     for (let i = 0; i <= ticks; i++) {
-      const v = domain.yMin + ((domain.yMax - domain.yMin) * i) / ticks;
       const py = padding.t + (1 - i / ticks) * innerH;
-      list.push({ y: py, label: `log10(P)=${v.toFixed(2)}` });
+      list.push({ y: py });
     }
     return list;
-  }, [domain.yMin, domain.yMax, innerH, padding.t]);
+  }, [innerH, padding.t]);
 
   const xTicks = useMemo(() => {
     const ticks = 4;
-    const list: { x: number; label: string }[] = [];
+    const list: { x: number }[] = [];
     for (let i = 0; i <= ticks; i++) {
       const x = padding.l + (innerW * i) / ticks;
-      const msAgo = props.windowMs - (props.windowMs * i) / ticks;
-      list.push({ x, label: `-${formatTimeAgo(msAgo)}` });
+      list.push({ x });
     }
     return list;
-  }, [props.windowMs, innerW, padding.l]);
+  }, [innerW, padding.l]);
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
-      <div className="flex items-center justify-between">
-        <div className="text-sm font-semibold text-gray-900">增长曲线</div>
-        <div className="text-xs text-gray-500">纵轴：log10(P)</div>
+    <div className="relative w-full overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100">
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-3">
+        <div className="max-w-[92%] text-center font-mono leading-snug drop-shadow-sm">
+          <div className="text-lg text-gray-900 sm:text-xl md:text-2xl">
+            <span>P(t+dt) = P(t)·e</span>
+            <sup className="ml-0.5 text-[0.72em] align-super">(rate·dt + b)</sup>
+          </div>
+          <div className="mt-1 text-xs text-gray-800/55 sm:text-sm">
+            rate = min(Rcap, r / (1 + max(0, log10(P)-S)/C))
+          </div>
+        </div>
       </div>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="w-full"
+        onMouseMove={e => {
+          const rect = (e.currentTarget as SVGElement).getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width) * width;
+          setHoverX(x);
+        }}
+        onMouseLeave={() => setHoverX(null)}
+      >
+        <rect x={padding.l} y={padding.t} width={innerW} height={innerH} fill="transparent" />
 
-      <div className="mt-3 w-full overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-b from-white to-gray-50">
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          className="w-full"
-          onMouseMove={e => {
-            const rect = (e.currentTarget as SVGElement).getBoundingClientRect();
-            const x = ((e.clientX - rect.left) / rect.width) * width;
-            setHoverX(x);
-          }}
-          onMouseLeave={() => setHoverX(null)}
-        >
-          <rect x={padding.l} y={padding.t} width={innerW} height={innerH} fill="transparent" />
+        {yTicks.map((t, idx) => (
+          <g key={idx}>
+            <line x1={padding.l} y1={t.y} x2={padding.l + innerW} y2={t.y} stroke="#e5e7eb" strokeWidth="1" />
+          </g>
+        ))}
 
-          {yTicks.map(t => (
-            <g key={t.label}>
-              <line x1={padding.l} y1={t.y} x2={padding.l + innerW} y2={t.y} stroke="#e5e7eb" strokeWidth="1" />
-              <text x={padding.l - 10} y={t.y + 4} textAnchor="end" fontSize="12" fill="#6b7280" fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">
-                {t.label}
+        {xTicks.map((t, idx) => (
+          <g key={idx}>
+            <line x1={t.x} y1={padding.t} x2={t.x} y2={padding.t + innerH} stroke="#eef2f7" strokeWidth="1" />
+          </g>
+        ))}
+
+        {pathD ? (
+          <g>
+            {areaD && <path d={areaD} fill="url(#areaGrad)" opacity="0.22" />}
+            <path d={pathD} fill="none" stroke="url(#grad)" strokeWidth="6" opacity="0.12" filter="url(#glow)" strokeLinejoin="round" strokeLinecap="round" />
+            <path d={pathD} fill="none" stroke="url(#grad)" strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" />
+          </g>
+        ) : (
+          <text x={padding.l + innerW / 2} y={padding.t + innerH / 2} textAnchor="middle" fontSize="14" fill="#9ca3af">
+            暂无数据
+          </text>
+        )}
+
+        <defs>
+          <linearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#60a5fa" />
+            <stop offset="100%" stopColor="#a78bfa" />
+          </linearGradient>
+          <linearGradient id="areaGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="#a78bfa" stopOpacity="0.35" />
+          </linearGradient>
+          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#60a5fa" floodOpacity="0.35" />
+            <feDropShadow dx="0" dy="2" stdDeviation="6" floodColor="#a78bfa" floodOpacity="0.22" />
+          </filter>
+        </defs>
+
+        {hover && (
+          <g>
+            <line x1={hover.x} y1={padding.t} x2={hover.x} y2={padding.t + innerH} stroke="#94a3b8" strokeDasharray="4 4" />
+            <circle cx={hover.x} cy={hover.y} r="5" fill="#111827" />
+            <circle cx={hover.x} cy={hover.y} r="3" fill="#60a5fa" />
+            <g transform={`translate(${clamp(hover.x + 12, padding.l, padding.l + innerW - 220)}, ${clamp(hover.y - 34, padding.t, padding.t + innerH - 54)})`}>
+              <rect width="220" height="54" rx="12" fill="white" stroke="#e5e7eb" />
+              <text x="10" y="22" fontSize="12" fill="#111827" fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">
+                log10(P)={hover.p.y.toFixed(3)}
+              </text>
+              <text x="10" y="42" fontSize="12" fill="#6b7280" fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">
+                t={formatTimeAgo(props.now - hover.p.t)} 前
               </text>
             </g>
-          ))}
-
-          {xTicks.map(t => (
-            <g key={t.label}>
-              <line x1={t.x} y1={padding.t} x2={t.x} y2={padding.t + innerH} stroke="#f3f4f6" strokeWidth="1" />
-              <text x={t.x} y={padding.t + innerH + 20} textAnchor="middle" fontSize="12" fill="#6b7280" fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">
-                {t.label}
-              </text>
-            </g>
-          ))}
-
-          {pathD ? (
-            <path d={pathD} fill="none" stroke="url(#grad)" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
-          ) : (
-            <text x={padding.l + innerW / 2} y={padding.t + innerH / 2} textAnchor="middle" fontSize="14" fill="#9ca3af">
-              暂无数据
-            </text>
-          )}
-
-          <defs>
-            <linearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#60a5fa" />
-              <stop offset="100%" stopColor="#a78bfa" />
-            </linearGradient>
-          </defs>
-
-          {hover && (
-            <g>
-              <line x1={hover.x} y1={padding.t} x2={hover.x} y2={padding.t + innerH} stroke="#94a3b8" strokeDasharray="4 4" />
-              <circle cx={hover.x} cy={hover.y} r="5" fill="#111827" />
-              <circle cx={hover.x} cy={hover.y} r="3" fill="#60a5fa" />
-              <g transform={`translate(${clamp(hover.x + 12, padding.l, padding.l + innerW - 220)}, ${clamp(hover.y - 34, padding.t, padding.t + innerH - 54)})`}>
-                <rect width="220" height="54" rx="10" fill="white" stroke="#e5e7eb" />
-                <text x="10" y="22" fontSize="12" fill="#111827" fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">
-                  log10(P)={hover.p.y.toFixed(3)}
-                </text>
-                <text x="10" y="42" fontSize="12" fill="#6b7280" fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">
-                  t={formatTimeAgo(props.now - hover.p.t)} 前
-                </text>
-              </g>
-            </g>
-          )}
-        </svg>
-      </div>
+          </g>
+        )}
+      </svg>
     </div>
   );
 }

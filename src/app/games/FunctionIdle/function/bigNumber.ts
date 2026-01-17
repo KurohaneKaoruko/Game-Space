@@ -134,5 +134,12 @@ export function bnFormat(a: BigNumber, digits = 3): string {
     const n = bnToNumber(a);
     if (Number.isFinite(n)) return n.toFixed(Math.max(0, digits - 1));
   }
-  return `${mantissa}×10^${a.e}`;
+  const e = a.e;
+  const absE = Math.abs(e);
+  if (absE < 1_000_000) {
+    return `${mantissa}e${e}`;
+  }
+  const ee = Math.log10(absE);
+  const eeText = Number.isFinite(ee) ? ee.toFixed(2) : '∞';
+  return `${mantissa}ee${eeText}`;
 }

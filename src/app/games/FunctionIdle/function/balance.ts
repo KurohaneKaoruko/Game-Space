@@ -13,8 +13,9 @@ export function baseFromLevel(level: number, bCurveLevel = 0, phi = 0): BigNumbe
 }
 
 export function rFromLevel(level: number, rCurveLevel = 0): number {
-  const curve = 1 + Math.max(0, rCurveLevel) * 0.1;
-  return 0.01 + level * 0.0035 * curve;
+  const curve = 1 + Math.max(0, rCurveLevel) * 0.08;
+  const growth = Math.pow(1.09, Math.max(0, level) * curve);
+  return 0.012 * growth + 0.008;
 }
 
 export function multiplierFromLevel(level: number): number {

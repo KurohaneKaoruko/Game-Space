@@ -1,11 +1,12 @@
 'use client';
 
-import Navigation from '../../components/Navigation';
-import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import { bnFormat, bnGte } from './function/bigNumber';
 import { applyMultiplier, multiplierFromLevel } from './function/balance';
 import { useFunctionIdle } from './function/useFunctionIdle';
 import { GrowthChart } from './components/GrowthChart';
+import { SettingsModal } from './components/SettingsModal';
 
 function formatDuration(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
@@ -18,8 +19,18 @@ function formatDuration(seconds: number): string {
 }
 
 export default function Page() {
-  const { state, offline, dismissOffline, pointsText, baseText, rText, costs, buyBase, buyR, buyMultiplier, buyBCurve, buyRCurve, prestige, prestigeInfo, autoBuy, toggleAutoBuy, reset, history, now } = useFunctionIdle();
-  const [windowMs, setWindowMs] = useState<number>(5 * 60 * 1000);
+  const { state, offline, dismissOffline, pointsText, baseText, rText, costs, buyBase, buyR, buyMultiplier, buyBCurve, buyRCurve, prestige, prestigeInfo, history, now, autoBuy, toggleAutoBuy, reset, exportSave, importSave } = useFunctionIdle();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const windowMs = 5 * 60 * 1000;
+
+  useEffect(() => {
+    document.documentElement.classList.add('hide-scrollbar');
+    document.body.classList.add('hide-scrollbar');
+    return () => {
+      document.documentElement.classList.remove('hide-scrollbar');
+      document.body.classList.remove('hide-scrollbar');
+    };
+  }, []);
 
   const affordableBase = state ? bnGte(state.points, costs.base) : false;
   const affordableR = state ? bnGte(state.points, costs.r) : false;
@@ -27,163 +38,115 @@ export default function Page() {
   const affordableBCurve = state ? bnGte(state.points, costs.bCurve) : false;
   const affordableRCurve = state ? bnGte(state.points, costs.rCurve) : false;
 
-  const effectiveBase = state ? applyMultiplier(state.base, state.multiplierLevel, state.phi ?? 0) : null;
+  const effectiveBase = state ? applyMultiplier(state.base, state.multiplierLevel, state.phi) : null;
   const chartPoints = useMemo(() => history.map(p => ({ t: p.t, y: p.logP })), [history]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <Navigation />
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-2 px-3 flex flex-col">
+      <div className="w-full max-w-screen-2xl mx-auto">
+        <div className="flex justify-between items-center mb-3 py-2">
+          <div className="w-20" />
+          <h1 className="font-bold text-gray-800 text-2xl">
+            <Link href="/" className="hover:text-blue-600 transition-colors">
+              函数 · 指数挂机
+            </Link>
+          </h1>
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            className="inline-flex items-center px-3 py-1.5 rounded-lg bg-white shadow-sm border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-300 hover:shadow transition-all text-sm font-medium"
+          >
+            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15.5A3.5 3.5 0 1012 8.5a3.5 3.5 0 000 7zm8.94-2.01l-1.66-.96a7.63 7.63 0 000-1.06l1.66-.96a.9.9 0 00.33-1.23l-1.7-2.95a.9.9 0 00-1.16-.4l-1.66.96c-.28-.23-.58-.43-.9-.6V3.3a.9.9 0 00-.9-.9H9.7a.9.9 0 00-.9.9v1.92c-.32.17-.62.37-.9.6l-1.66-.96a.9.9 0 00-1.16.4L3.38 8.2a.9.9 0 00.33 1.23l1.66.96a7.63 7.63 0 000 1.06l-1.66.96a.9.9 0 00-.33 1.23l1.7 2.95a.9.9 0 001.16.4l1.66-.96c.28.23.58.43.9.6v1.92c0 .5.4.9.9.9h3.4c.5 0 .9-.4.9-.9v-1.92c.32-.17.62-.37.9-.6l1.66.96a.9.9 0 001.16-.4l1.7-2.95a.9.9 0 00-.33-1.23z" />
+            </svg>
+            设置
+          </button>
+        </div>
 
-      <div className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto">
-          <div className="mb-8">
-            <div className="flex items-center justify-between gap-4">
-              <h1 className="text-3xl font-bold text-gray-900">函数 · 指数挂机</h1>
-              <div className="text-sm text-gray-600">
-                φ <span className="font-mono font-semibold text-gray-900">{state?.phi ?? 0}</span>
+        <div className="flex flex-col lg:flex-row lg:items-start lg:space-x-5">
+          <div className="lg:flex-1 space-y-3">
+            <div className="bg-white rounded-xl shadow-md overflow-hidden p-3">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-sm text-gray-600">
+                  当前积分 <span className="font-mono font-semibold text-gray-900">{pointsText}</span>
+                </div>
+                <div className="text-sm text-gray-600">
+                  φ <span className="font-mono font-semibold text-gray-900">{state?.phi ?? 0}</span>
+                </div>
+              </div>
+              <GrowthChart points={chartPoints} now={now} windowMs={windowMs} height={480} />
+            </div>
+
+            <div className="bg-white rounded-xl shadow-md overflow-hidden p-3">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <ScoreBox title="指数偏置源 b" value={baseText} tone="blue" sub={`Lv.${state?.bLevel ?? 0} · 影响 b`} />
+                <ScoreBox title="指数率 r" value={rText} tone="purple" sub={`Lv.${state?.rLevel ?? 0} · 影响 rate`} />
+                <ScoreBox title="倍率 m" value={`${(multiplierFromLevel(state?.multiplierLevel ?? 0)).toFixed(2)}×`} tone="gray" sub={`Lv.${state?.multiplierLevel ?? 0}`} />
+                <ScoreBox title="有效 b_eff" value={effectiveBase ? bnFormat(effectiveBase, 4) : '...'} tone="gray" sub="用于计算 b 与 rate" />
               </div>
             </div>
-            <p className="mt-2 text-gray-600">
-              通过微分方程推进进度：<span className="font-mono">dP/dt = r·P + b</span>
-            </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <section className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-start justify-between gap-4">
+          <aside className="lg:w-72 xl:w-80 bg-white rounded-xl shadow-md overflow-hidden p-3 mt-3 lg:mt-0">
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-gray-800 text-lg">升级</h2>
+            </div>
+
+            <div className="mt-3 space-y-3">
+              <UpgradeCard title="提升 b" formula="b_eff ↑ ⇒ b ↑（指数偏置）" cost={bnFormat(costs.base, 4)} disabled={!affordableBase} onBuy={buyBase} />
+              <UpgradeCard title="提升 r" formula="r ↑ ⇒ rate ↑（指数率）" cost={bnFormat(costs.r, 4)} disabled={!affordableR} onBuy={buyR} />
+              <UpgradeCard title="提升 m" formula="m ↑ ⇒ b_eff ↑ ⇒ b ↑" cost={bnFormat(costs.multiplier, 4)} disabled={!affordableMultiplier} onBuy={buyMultiplier} />
+              <UpgradeCard title="曲率：b" formula="b 的增长斜率 ↑（影响 b_eff）" cost={bnFormat(costs.bCurve, 4)} disabled={!affordableBCurve} onBuy={buyBCurve} />
+              <UpgradeCard title="曲率：r" formula="r 的增长斜率 ↑（影响 rate）" cost={bnFormat(costs.rCurve, 4)} disabled={!affordableRCurve} onBuy={buyRCurve} />
+            </div>
+
+            <div className="mt-3 rounded-xl bg-gray-50 border border-gray-200 p-3">
+              <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-sm text-gray-500">当前积分 P</div>
-                  <div className="text-3xl font-semibold text-gray-900 font-mono">{pointsText}</div>
+                  <div className="font-semibold text-gray-900">尺度变换</div>
+                  <div className="mt-1 text-xs text-gray-500 font-mono">P → 0，获得 φ</div>
+                  <div className="mt-2 text-sm text-gray-700">
+                    需要 <span className="font-mono">{bnFormat(prestigeInfo.requirement, 4)}</span>
+                  </div>
+                  <div className="mt-1 text-sm text-gray-700">
+                    收益 <span className="font-mono">+{prestigeInfo.gainPhi}</span> φ
+                  </div>
                 </div>
                 <button
-                  onClick={reset}
-                  className="px-3 py-2 text-sm rounded-md border border-gray-200 hover:bg-gray-50 text-gray-700"
+                  onClick={prestige}
+                  disabled={!prestigeInfo.available}
+                  className={`
+                    py-2 px-4 rounded-lg font-medium text-sm transition-colors 
+                    justify-center flex items-center
+                    ${prestigeInfo.available ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}
+                  `}
                 >
-                  重置
+                  变换
                 </button>
               </div>
+            </div>
 
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Stat title="常数项 b" value={baseText} sub={`等级 ${state?.bLevel ?? 0}`} />
-                <Stat title="增长率 r" value={rText} sub={`等级 ${state?.rLevel ?? 0}`} />
-                <Stat title="倍率 m" value={`${(multiplierFromLevel(state?.multiplierLevel ?? 0)).toFixed(2)}×`} sub={`等级 ${state?.multiplierLevel ?? 0}`} />
-              </div>
-
-              <div className="mt-6 bg-gray-50 rounded-lg border border-gray-200 p-4">
-                <div className="text-sm text-gray-600">有效常数项</div>
-                <div className="font-mono text-gray-900">{effectiveBase ? bnFormat(effectiveBase, 4) : '...'}</div>
-              </div>
-
-              <div className="mt-6">
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="text-sm font-semibold text-gray-900">曲线窗口</div>
-                  <div className="flex items-center gap-2">
-                    <TimeBtn active={windowMs === 60_000} onClick={() => setWindowMs(60_000)} label="1m" />
-                    <TimeBtn active={windowMs === 5 * 60_000} onClick={() => setWindowMs(5 * 60_000)} label="5m" />
-                    <TimeBtn active={windowMs === 30 * 60_000} onClick={() => setWindowMs(30 * 60_000)} label="30m" />
-                  </div>
-                </div>
-                <GrowthChart points={chartPoints} now={now} windowMs={windowMs} />
-              </div>
-            </section>
-
-            <aside className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900">升级（函数变换）</h2>
-              <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                <div className="text-sm font-semibold text-gray-900">自动购买</div>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  <Toggle label="b" on={autoBuy.base} onToggle={() => toggleAutoBuy('base')} />
-                  <Toggle label="r" on={autoBuy.r} onToggle={() => toggleAutoBuy('r')} />
-                  <Toggle label="m" on={autoBuy.multiplier} onToggle={() => toggleAutoBuy('multiplier')} />
-                  <Toggle label="曲率 b" on={autoBuy.bCurve} onToggle={() => toggleAutoBuy('bCurve')} />
-                  <Toggle label="曲率 r" on={autoBuy.rCurve} onToggle={() => toggleAutoBuy('rCurve')} />
-                </div>
-              </div>
-              <div className="mt-4 space-y-3">
-                <UpgradeCard
-                  title="提升 b"
-                  formula="b ← 10^{k} · 2.5"
-                  cost={bnFormat(costs.base, 4)}
-                  disabled={!affordableBase}
-                  onBuy={buyBase}
-                />
-                <UpgradeCard
-                  title="提升 r"
-                  formula="r ← r + Δ"
-                  cost={bnFormat(costs.r, 4)}
-                  disabled={!affordableR}
-                  onBuy={buyR}
-                />
-                <UpgradeCard
-                  title="提升 m"
-                  formula="b ← m · b"
-                  cost={bnFormat(costs.multiplier, 4)}
-                  disabled={!affordableMultiplier}
-                  onBuy={buyMultiplier}
-                />
-                <UpgradeCard
-                  title="曲率：b"
-                  formula={`b 的指数斜率 ← ×(1+0.12·k)`}
-                  cost={bnFormat(costs.bCurve, 4)}
-                  disabled={!affordableBCurve}
-                  onBuy={buyBCurve}
-                />
-                <UpgradeCard
-                  title="曲率：r"
-                  formula={`r 的增长斜率 ← ×(1+0.10·k)`}
-                  cost={bnFormat(costs.rCurve, 4)}
-                  disabled={!affordableRCurve}
-                  onBuy={buyRCurve}
-                />
-              </div>
-
-              <div className="mt-5 rounded-lg border border-gray-200 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="font-semibold text-gray-900">尺度变换</div>
-                    <div className="mt-1 text-xs text-gray-500 font-mono">
-                      P → 0，获得 φ
-                    </div>
-                    <div className="mt-2 text-sm text-gray-700">
-                      需要 <span className="font-mono">{bnFormat(prestigeInfo.requirement, 4)}</span>
-                    </div>
-                    <div className="mt-1 text-sm text-gray-700">
-                      收益 <span className="font-mono">+{prestigeInfo.gainPhi}</span> φ
-                    </div>
-                  </div>
-                  <button
-                    onClick={prestige}
-                    disabled={!prestigeInfo.available}
-                    className={`px-3 py-2 rounded-md text-sm ${
-                      prestigeInfo.available ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    变换
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-6 text-xs text-gray-500 leading-relaxed">
-                离线时将按上次保存时间自动结算（最多结算 30 天）。
-              </div>
-            </aside>
-          </div>
+            <div className="mt-3 text-xs text-gray-500 leading-relaxed">
+              离线时将按上次保存时间自动结算（最多结算 30 天）。
+            </div>
+          </aside>
         </div>
       </div>
 
       {offline && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-            <div className="text-lg font-semibold text-gray-900">离线结算</div>
+          <div className="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-200 p-5">
+            <div className="text-lg font-bold text-gray-900">离线结算</div>
             <div className="mt-2 text-sm text-gray-600">离线时长：{formatDuration(offline.offlineSeconds)}</div>
-            <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <div className="text-sm text-gray-600">获得积分</div>
-              <div className="font-mono text-gray-900">{bnFormat(offline.gainedPoints, 4)}</div>
+            <div className="mt-4 bg-gray-100 rounded-lg p-3 text-center">
+              <p className="text-xs text-gray-500 mb-1">获得积分</p>
+              <p className="text-xl font-bold text-blue-600 font-mono">{bnFormat(offline.gainedPoints, 4)}</p>
             </div>
-            <div className="mt-6 flex justify-end">
+            <div className="mt-5 flex justify-end">
               <button
+                type="button"
                 onClick={dismissOffline}
-                className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
               >
                 继续
               </button>
@@ -191,37 +154,50 @@ export default function Page() {
           </div>
         </div>
       )}
-    </main>
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        autoBuy={autoBuy}
+        onToggleAutoBuy={toggleAutoBuy}
+        onReset={reset}
+        onExport={exportSave}
+        onImport={importSave}
+      />
+    </div>
   );
 }
 
-function Stat(props: { title: string; value: string; sub: string }) {
+function ScoreBox(props: { title: string; value: string; sub: string; tone: 'blue' | 'purple' | 'gray' }) {
+  const valueClass = props.tone === 'blue' ? 'text-blue-600' : props.tone === 'purple' ? 'text-purple-600' : 'text-gray-900';
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
-      <div className="text-sm text-gray-500">{props.title}</div>
-      <div className="mt-1 font-mono text-lg text-gray-900">{props.value}</div>
-      <div className="mt-1 text-xs text-gray-500">{props.sub}</div>
+    <div className="bg-gray-100 rounded-lg p-3 text-center">
+      <p className="text-xs text-gray-500 mb-1">{props.title}</p>
+      <p className={`text-lg font-bold font-mono ${valueClass}`}>{props.value}</p>
+      <p className="text-[11px] text-gray-500 mt-1">{props.sub}</p>
     </div>
   );
 }
 
 function UpgradeCard(props: { title: string; formula: string; cost: string; disabled: boolean; onBuy: () => void }) {
   return (
-    <div className="rounded-lg border border-gray-200 p-4">
+    <div className="rounded-xl bg-gray-50 border border-gray-200 p-3">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <div className="font-semibold text-gray-900">{props.title}</div>
-          <div className="mt-1 text-xs text-gray-500 font-mono">{props.formula}</div>
+          <div className="mt-1 text-xs text-gray-500 font-mono truncate">{props.formula}</div>
           <div className="mt-2 text-sm text-gray-700">
             代价 <span className="font-mono">{props.cost}</span>
           </div>
         </div>
         <button
+          type="button"
           onClick={props.onBuy}
           disabled={props.disabled}
-          className={`px-3 py-2 rounded-md text-sm ${
-            props.disabled ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-900 text-white hover:bg-gray-800'
-          }`}
+          className={`
+            py-2 px-4 rounded-lg font-medium text-sm transition-colors 
+            justify-center flex items-center whitespace-nowrap
+            ${props.disabled ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gray-900 hover:bg-gray-800 text-white'}
+          `}
         >
           购买
         </button>
@@ -229,31 +205,3 @@ function UpgradeCard(props: { title: string; formula: string; cost: string; disa
     </div>
   );
 }
-
-function TimeBtn(props: { active: boolean; onClick: () => void; label: string }) {
-  return (
-    <button
-      onClick={props.onClick}
-      className={`px-3 py-1.5 rounded-md text-xs border ${
-        props.active ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-      }`}
-    >
-      {props.label}
-    </button>
-  );
-}
-
-function Toggle(props: { label: string; on: boolean; onToggle: () => void }) {
-  return (
-    <button
-      onClick={props.onToggle}
-      className={`flex items-center justify-between rounded-md border px-3 py-2 text-sm ${
-        props.on ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-      }`}
-    >
-      <span>{props.label}</span>
-      <span className="font-mono text-xs">{props.on ? 'ON' : 'OFF'}</span>
-    </button>
-  );
-}
-

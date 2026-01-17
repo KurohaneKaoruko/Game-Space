@@ -84,6 +84,60 @@ function isValidStateV2(value: unknown): value is FunctionIdleState {
   );
 }
 
+export function coerceState(value: unknown, now: number): FunctionIdleState | null {
+  if (isValidStateV2(value)) {
+    const s = value as FunctionIdleState;
+    return {
+      ...s,
+      points: bnNormalize(s.points),
+      base: bnNormalize(s.base),
+      lastTimestamp: typeof s.lastTimestamp === 'number' ? s.lastTimestamp : now,
+    };
+  }
+
+  const v1 = value as Partial<FunctionIdleStateV1>;
+  const isValidV1 =
+    v1?.version === 1 &&
+    isValidBigNumber(v1.points) &&
+    isValidBigNumber(v1.base) &&
+    typeof v1.r === 'number' &&
+    Number.isFinite(v1.r) &&
+    typeof v1.bLevel === 'number' &&
+    Number.isInteger(v1.bLevel) &&
+    v1.bLevel >= 0 &&
+    typeof v1.rLevel === 'number' &&
+    Number.isInteger(v1.rLevel) &&
+    v1.rLevel >= 0 &&
+    typeof v1.multiplierLevel === 'number' &&
+    Number.isInteger(v1.multiplierLevel) &&
+    v1.multiplierLevel >= 0 &&
+    typeof v1.lastTimestamp === 'number' &&
+    Number.isFinite(v1.lastTimestamp);
+
+  if (!isValidV1) return null;
+
+  const migrated: FunctionIdleState = {
+    version: STORAGE_VERSION,
+    points: bnNormalize(v1.points as BigNumber),
+    base: bnNormalize(v1.base as BigNumber),
+    r: v1.r as number,
+    bLevel: v1.bLevel as number,
+    rLevel: v1.rLevel as number,
+    multiplierLevel: v1.multiplierLevel as number,
+    phi: typeof v1.phi === 'number' && Number.isFinite(v1.phi) ? Math.max(0, v1.phi) : 0,
+    bCurveLevel: typeof v1.bCurveLevel === 'number' && Number.isInteger(v1.bCurveLevel) ? Math.max(0, v1.bCurveLevel) : 0,
+    rCurveLevel: typeof v1.rCurveLevel === 'number' && Number.isInteger(v1.rCurveLevel) ? Math.max(0, v1.rCurveLevel) : 0,
+    autoBuy: {
+      ...DEFAULT_AUTO_BUY,
+      ...(typeof v1.autoBuy === 'object' && v1.autoBuy !== null ? v1.autoBuy : {}),
+    },
+    lastTimestamp: v1.lastTimestamp as number,
+  };
+
+  migrated.lastTimestamp = typeof migrated.lastTimestamp === 'number' ? migrated.lastTimestamp : now;
+  return migrated;
+}
+
 export function defaultState(now: number): FunctionIdleState {
   return {
     version: STORAGE_VERSION,
@@ -114,57 +168,14 @@ export function loadState(now: number): FunctionIdleState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState(now);
     const parsed: unknown = JSON.parse(raw);
-    if (isValidStateV2(parsed)) {
-      const s = parsed as FunctionIdleState;
-      return {
-        ...s,
-        points: bnNormalize(s.points),
-        base: bnNormalize(s.base),
-        lastTimestamp: typeof s.lastTimestamp === 'number' ? s.lastTimestamp : now,
-      };
-    }
-
-    const v1 = parsed as Partial<FunctionIdleStateV1>;
-    const isValidV1 =
-      v1?.version === 1 &&
-      isValidBigNumber(v1.points) &&
-      isValidBigNumber(v1.base) &&
-      typeof v1.r === 'number' &&
-      Number.isFinite(v1.r) &&
-      typeof v1.bLevel === 'number' &&
-      Number.isInteger(v1.bLevel) &&
-      v1.bLevel >= 0 &&
-      typeof v1.rLevel === 'number' &&
-      Number.isInteger(v1.rLevel) &&
-      v1.rLevel >= 0 &&
-      typeof v1.multiplierLevel === 'number' &&
-      Number.isInteger(v1.multiplierLevel) &&
-      v1.multiplierLevel >= 0 &&
-      typeof v1.lastTimestamp === 'number' &&
-      Number.isFinite(v1.lastTimestamp);
-
-    if (!isValidV1) return defaultState(now);
-
-    const migrated: FunctionIdleState = {
-      version: STORAGE_VERSION,
-      points: bnNormalize(v1.points as BigNumber),
-      base: bnNormalize(v1.base as BigNumber),
-      r: v1.r as number,
-      bLevel: v1.bLevel as number,
-      rLevel: v1.rLevel as number,
-      multiplierLevel: v1.multiplierLevel as number,
-      phi: typeof v1.phi === 'number' && Number.isFinite(v1.phi) ? Math.max(0, v1.phi) : 0,
-      bCurveLevel: typeof v1.bCurveLevel === 'number' && Number.isInteger(v1.bCurveLevel) ? Math.max(0, v1.bCurveLevel) : 0,
-      rCurveLevel: typeof v1.rCurveLevel === 'number' && Number.isInteger(v1.rCurveLevel) ? Math.max(0, v1.rCurveLevel) : 0,
-      autoBuy: {
-        ...DEFAULT_AUTO_BUY,
-        ...(typeof v1.autoBuy === 'object' && v1.autoBuy !== null ? v1.autoBuy : {}),
-      },
-      lastTimestamp: v1.lastTimestamp as number,
-    };
-
-    saveState(migrated);
-    return migrated;
+    const coerced = coerceState(parsed, now);
+    if (!coerced) return defaultState(now);
+    if (coerced.version !== STORAGE_VERSION) return defaultState(now);
+    if (!isValidStateV2(coerced)) return defaultState(now);
+    const parsedVersion =
+      typeof parsed === 'object' && parsed !== null ? (parsed as { version?: unknown }).version : undefined;
+    if (parsedVersion !== STORAGE_VERSION) saveState(coerced);
+    return coerced;
   } catch (e) {
     console.warn('Failed to load FunctionIdle state:', e);
     return defaultState(now);

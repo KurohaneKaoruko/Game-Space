@@ -6,7 +6,8 @@ import type { FunctionIdleSnapshot, FunctionIdleState } from '../types';
 import { BN_ZERO, bnFormat, bnGte, bnLog10, bnPow10, bnSub } from './bigNumber';
 import { costBase, costBCurve, costMultiplier, costR, costRCurve, rFromLevel, baseFromLevel } from './balance';
 import { simulateOffline, tick } from './engine';
-import { clearState, loadState, saveState } from './storage';
+import { clearState, defaultState, loadState, saveState } from './storage';
+import { decodeState, encodeState } from './saveCodec';
 
 const DEFAULT_AUTO_BUY = {
   base: false,
@@ -15,6 +16,16 @@ const DEFAULT_AUTO_BUY = {
   bCurve: false,
   rCurve: false,
 };
+
+const DEFAULT_TICK_MS = 1000;
+
+const TICK_MS = (() => {
+  const raw = process.env.NEXT_PUBLIC_FUNCTION_IDLE_TICK_MS;
+  const parsed = raw ? Number(raw) : DEFAULT_TICK_MS;
+  if (!Number.isFinite(parsed)) return DEFAULT_TICK_MS;
+  const clamped = Math.max(100, Math.min(10_000, Math.floor(parsed)));
+  return clamped;
+})();
 
 type UseFunctionIdleResult = {
   state: FunctionIdleState | null;
@@ -38,6 +49,8 @@ type UseFunctionIdleResult = {
   autoBuy: typeof DEFAULT_AUTO_BUY;
   toggleAutoBuy: (key: keyof typeof DEFAULT_AUTO_BUY) => void;
   reset: () => void;
+  exportSave: () => string;
+  importSave: (raw: string) => { ok: boolean; error?: string };
   dismissOffline: () => void;
   costs: {
     base: BigNumber;
@@ -83,7 +96,7 @@ export function useFunctionIdle(): UseFunctionIdleResult {
         const { next } = tick(prev, now);
         return next;
       });
-    }, 200);
+    }, TICK_MS);
     return () => window.clearInterval(interval);
   }, []);
 
@@ -121,7 +134,7 @@ export function useFunctionIdle(): UseFunctionIdleResult {
         if (next.length <= max) return next;
         return next.slice(next.length - max);
       });
-    }, 500);
+    }, TICK_MS);
     return () => window.clearInterval(interval);
   }, []);
 
@@ -300,14 +313,15 @@ export function useFunctionIdle(): UseFunctionIdleResult {
         s = { ...s, autoBuy: ab };
         return s;
       });
-    }, 1000);
+    }, TICK_MS);
     return () => window.clearInterval(interval);
   }, []);
 
   const reset = useCallback(() => {
     const now = Date.now();
     clearState();
-    const fresh = loadState(now);
+    const fresh = defaultState(now);
+    saveState(fresh);
     setState(fresh);
     stateRef.current = fresh;
     setOffline(null);
@@ -316,6 +330,27 @@ export function useFunctionIdle(): UseFunctionIdleResult {
   }, []);
 
   const dismissOffline = useCallback(() => setOffline(null), []);
+
+  const exportSave = useCallback((): string => {
+    const s = stateRef.current;
+    if (!s) return '';
+    return encodeState(s);
+  }, []);
+
+  const importSave = useCallback((raw: string): { ok: boolean; error?: string } => {
+    const now = Date.now();
+    const coerced = decodeState(raw, now);
+    if (!coerced) return { ok: false, error: '导入码无效' };
+    saveState(coerced);
+    const simulated = simulateOffline(coerced, now);
+    setState(simulated.next);
+    stateRef.current = simulated.next;
+    setOffline(null);
+    const initialLogP = bnLog10(simulated.next.points);
+    setHistory([{ t: simulated.next.lastTimestamp, logP: Number.isFinite(initialLogP) ? initialLogP : 0 }]);
+    setNow(now);
+    return { ok: true };
+  }, []);
 
   const pointsText = useMemo(() => (state ? bnFormat(state.points, 4) : '...'), [state]);
   const baseText = useMemo(() => (state ? bnFormat(state.base, 4) : '...'), [state]);
@@ -339,6 +374,8 @@ export function useFunctionIdle(): UseFunctionIdleResult {
     autoBuy,
     toggleAutoBuy,
     reset,
+    exportSave,
+    importSave,
     dismissOffline,
     costs,
   };
