@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import Navigation from '../components/Navigation';
-import { games } from '../data/games';
+import { games } from '../data/projects';
 
-export default function games() {
+export default function GamesPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       <Navigation />
