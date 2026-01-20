@@ -1,0 +1,350 @@
+'use client';
+
+import type { PendulumParams, Vec2 } from '../engine/types';
+import type { PendulumSimulation } from '../engine/pendulumSimulation';
+import { clamp, dist } from '../engine/vec2';
+import { useEffect, useMemo, useRef } from 'react';
+
+type Props = {
+  simRef: React.MutableRefObject<PendulumSimulation>;
+  params: PendulumParams;
+  paused: boolean;
+  showTrail: boolean;
+  trailLength: number;
+  showEnergy: boolean;
+  resetToken: number;
+};
+
+function formatPercent(n: number) {
+  if (!Number.isFinite(n)) return '0.00%';
+  return `${(n * 100).toFixed(2)}%`;
+}
+
+export default function SimulationCanvas({ simRef, params, paused, showTrail, trailLength, showEnergy, resetToken }: Props) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const draggingRef = useRef(false);
+  const dragIndexRef = useRef<number | null>(null);
+  const accRef = useRef(0);
+
+  const settingsRef = useRef({ paused, showTrail, trailLength, showEnergy, resetToken, params });
+  useEffect(() => {
+    settingsRef.current = { paused, showTrail, trailLength, showEnergy, resetToken, params };
+  }, [paused, showTrail, trailLength, showEnergy, resetToken, params]);
+
+  useEffect(() => {
+    const endDrag = () => {
+      if (!draggingRef.current) return;
+      draggingRef.current = false;
+      dragIndexRef.current = null;
+      simRef.current.endDrag();
+    };
+
+    const onPointerUpOrCancel = () => endDrag();
+    const onBlur = () => endDrag();
+    const onVisibilityChange = () => {
+      if (document.hidden) endDrag();
+    };
+
+    window.addEventListener('pointerup', onPointerUpOrCancel);
+    window.addEventListener('pointercancel', onPointerUpOrCancel);
+    window.addEventListener('blur', onBlur);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      window.removeEventListener('pointerup', onPointerUpOrCancel);
+      window.removeEventListener('pointercancel', onPointerUpOrCancel);
+      window.removeEventListener('blur', onBlur);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [simRef]);
+
+  const lastResetTokenRef = useRef(resetToken);
+  const baseEnergyRef = useRef<number | null>(null);
+  const energyBufRef = useRef<{ total: number; kinetic: number; potential: number }[]>([]);
+  const trailRef = useRef<Vec2[]>([]);
+
+  const totalLength = useMemo(() => {
+    const count = params.mode === 'double' ? 2 : 3;
+    return params.lengths.slice(0, count).reduce((a, b) => a + Math.max(0.05, b), 0);
+  }, [params.lengths, params.mode]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+
+    const preventTouch = (ev: TouchEvent) => {
+      if (ev.cancelable) ev.preventDefault();
+    };
+    canvas.addEventListener('touchstart', preventTouch, { passive: false });
+    canvas.addEventListener('touchmove', preventTouch, { passive: false });
+
+    let raf = 0;
+    let lastMs = performance.now();
+    const fixedDt = 1 / 240;
+    const maxStepsPerFrame = 8 * 240;
+
+    const worldToScreen = (p: Vec2, origin: Vec2, scale: number) => ({ x: origin.x + p.x * scale, y: origin.y + p.y * scale });
+
+    const loop = () => {
+      const now = performance.now();
+      const dt = Math.min(0.05, (now - lastMs) / 1000);
+      lastMs = now;
+
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+
+      const origin = { x: w / 2, y: h * 0.22 };
+      const scale = Math.max(10, (Math.min(w, h) * 0.38) / Math.max(0.1, totalLength));
+
+      const { paused: pausedNow, showTrail: trailOn, trailLength: trailN, showEnergy: energyOn, resetToken: resetNow, params: paramsNow } =
+        settingsRef.current;
+
+      if (resetNow !== lastResetTokenRef.current) {
+        lastResetTokenRef.current = resetNow;
+        baseEnergyRef.current = null;
+        energyBufRef.current = [];
+        trailRef.current = [];
+        accRef.current = 0;
+      }
+
+      if (!pausedNow && !draggingRef.current) accRef.current += dt;
+      if (draggingRef.current) simRef.current.relax();
+      let steps = 0;
+      while (accRef.current >= fixedDt && steps < maxStepsPerFrame) {
+        simRef.current.step(fixedDt);
+        accRef.current -= fixedDt;
+        steps++;
+      }
+
+      const snap = simRef.current.getSnapshot(fixedDt);
+
+      if (trailOn) {
+        const last = snap.points[snap.points.length - 1];
+        trailRef.current.push(last);
+        if (trailRef.current.length > trailN) trailRef.current.splice(0, trailRef.current.length - trailN);
+      } else {
+        trailRef.current = [];
+      }
+
+      if (energyOn) {
+        if (baseEnergyRef.current == null) baseEnergyRef.current = snap.energy.total;
+        const base = baseEnergyRef.current || 1;
+        energyBufRef.current.push({
+          total: snap.energy.total / base,
+          kinetic: snap.energy.kinetic / base,
+          potential: snap.energy.potential / base,
+        });
+        if (energyBufRef.current.length > 360) energyBufRef.current.splice(0, energyBufRef.current.length - 360);
+      } else {
+        energyBufRef.current = [];
+        baseEnergyRef.current = null;
+      }
+
+      ctx.clearRect(0, 0, w, h);
+
+      ctx.fillStyle = '#F8FAFC';
+      ctx.fillRect(0, 0, w, h);
+
+      const trail = trailRef.current;
+      if (trailOn && trail.length >= 2) {
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(14, 165, 233, 0.55)';
+        ctx.beginPath();
+        const s0 = worldToScreen(trail[0], origin, scale);
+        ctx.moveTo(s0.x, s0.y);
+        for (let i = 1; i < trail.length; i++) {
+          const s = worldToScreen(trail[i], origin, scale);
+          ctx.lineTo(s.x, s.y);
+        }
+        ctx.stroke();
+      }
+
+      const pointsS = snap.points.map((p) => worldToScreen(p, origin, scale));
+
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#0F172A';
+      ctx.beginPath();
+      ctx.moveTo(origin.x, origin.y);
+      for (const p of pointsS) ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+
+      const count = paramsNow.mode === 'double' ? 2 : 3;
+      const masses = paramsNow.masses;
+      for (let i = 0; i < count; i++) {
+        const r = 8 + 4 * Math.sqrt(Math.max(0.2, masses[i]));
+        ctx.fillStyle = i === count - 1 ? '#F59E0B' : '#38BDF8';
+        ctx.beginPath();
+        ctx.arc(pointsS[i].x, pointsS[i].y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#0F172A';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = '#0F172A';
+      ctx.beginPath();
+      ctx.arc(origin.x, origin.y, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#0F172A';
+      ctx.font = '12px ui-sans-serif, system-ui, -apple-system';
+      ctx.fillText(pausedNow ? '暂停' : '运行中', 12, h - 12);
+
+      if (energyOn && energyBufRef.current.length >= 2) {
+        const buf = energyBufRef.current;
+        const boxW = Math.min(220, w - 24);
+        const boxH = 76;
+        const x0 = 12;
+        const y0 = 12;
+
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.strokeStyle = 'rgba(15,23,42,0.15)';
+        ctx.lineWidth = 1;
+        ctx.fillRect(x0, y0, boxW, boxH);
+        ctx.strokeRect(x0, y0, boxW, boxH);
+
+        const yMid = y0 + boxH / 2;
+        ctx.strokeStyle = 'rgba(15,23,42,0.12)';
+        ctx.beginPath();
+        ctx.moveTo(x0, yMid);
+        ctx.lineTo(x0 + boxW, yMid);
+        ctx.stroke();
+
+        const drawLine = (key: 'total' | 'kinetic' | 'potential', color: string) => {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          for (let i = 0; i < buf.length; i++) {
+            const t = i / (buf.length - 1);
+            const x = x0 + t * boxW;
+            const val = buf[i][key];
+            const y = y0 + boxH - clamp((val - 0.6) / 0.9, 0, 1) * boxH;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        };
+
+        drawLine('potential', 'rgba(59,130,246,0.75)');
+        drawLine('kinetic', 'rgba(16,185,129,0.75)');
+        drawLine('total', 'rgba(15,23,42,0.85)');
+
+        const last = buf[buf.length - 1];
+        const drift = last.total - 1;
+        ctx.fillStyle = '#0F172A';
+        ctx.font = '12px ui-sans-serif, system-ui, -apple-system';
+        ctx.fillText(`能量漂移: ${formatPercent(drift)}`, x0 + 10, y0 + boxH - 8);
+      }
+
+      raf = requestAnimationFrame(loop);
+    };
+
+    raf = requestAnimationFrame(loop);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      canvas.removeEventListener('touchstart', preventTouch);
+      canvas.removeEventListener('touchmove', preventTouch);
+    };
+  }, [simRef, totalLength]);
+
+  const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const canvas = e.currentTarget;
+    const rect = canvas.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+    const origin = { x: w / 2, y: h * 0.22 };
+    const scale = Math.max(10, (Math.min(w, h) * 0.38) / Math.max(0.1, totalLength));
+
+    const pScreen = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    const snap = simRef.current.getSnapshot(1 / 240);
+    const pointsS = snap.points.map((p) => ({ x: origin.x + p.x * scale, y: origin.y + p.y * scale }));
+
+    const count = params.mode === 'double' ? 2 : 3;
+    let pick: number | null = null;
+    let pickD = Infinity;
+    for (let i = 0; i < count; i++) {
+      const d = dist(pScreen, pointsS[i]);
+      const r = 8 + 4 * Math.sqrt(Math.max(0.2, params.masses[i]));
+      if (d <= r + 10 && d < pickD) {
+        pick = i + 1;
+        pickD = d;
+      }
+    }
+    if (pick != null) {
+      draggingRef.current = true;
+      dragIndexRef.current = pick;
+      accRef.current = 0;
+      simRef.current.startDrag(pick);
+      const world = { x: (pScreen.x - origin.x) / scale, y: (pScreen.y - origin.y) / scale };
+      simRef.current.dragTo(world);
+      simRef.current.relax();
+      try {
+        canvas.setPointerCapture(e.pointerId);
+      } catch {}
+    }
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!draggingRef.current || dragIndexRef.current == null) return;
+    e.preventDefault();
+    const canvas = e.currentTarget;
+    const rect = canvas.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+    const origin = { x: w / 2, y: h * 0.22 };
+    const scale = Math.max(10, (Math.min(w, h) * 0.38) / Math.max(0.1, totalLength));
+    const pScreen = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    const world = { x: (pScreen.x - origin.x) / scale, y: (pScreen.y - origin.y) / scale };
+    simRef.current.dragTo(world);
+    simRef.current.relax();
+  };
+
+  const onPointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    dragIndexRef.current = null;
+    simRef.current.endDrag();
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {}
+  };
+
+  return (
+    <div className="w-full">
+      <div className="w-full aspect-[16/10] rounded-lg overflow-hidden bg-gray-50 border border-gray-200">
+        <canvas
+          ref={canvasRef}
+          className="w-full h-full touch-none"
+          style={{ touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          onContextMenu={(e) => e.preventDefault()}
+        />
+      </div>
+      <div className="mt-2 text-xs text-gray-500">
+        鼠标/手指拖拽摆锤；参数可实时调节。能量曲线用于观察数值误差。
+      </div>
+    </div>
+  );
+}

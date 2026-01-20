@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "commit": "git add . && git-cz",
     "train:2048": "npx ts-node tools/game2048-trainer/train.ts",
     "train:2048:fast": "npx ts-node tools/game2048-trainer/train.ts --episodes 10000 --output tools/game2048-trainer/weights-fast.json",
@@ -39,6 +41,7 @@
     "eslint-config-next": "15.2.4",
     "tailwindcss": "^4.0.17",
     "ts-node": "^10.9.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.8"
   }
 }
