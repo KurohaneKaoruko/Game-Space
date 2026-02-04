@@ -36,6 +36,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@webgpu/types": "^0.1.67",
     "daisyui": "^5.0.12",
     "eslint": "^9",
     "eslint-config-next": "15.2.4",

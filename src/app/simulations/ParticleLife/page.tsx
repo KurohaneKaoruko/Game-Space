@@ -70,9 +70,10 @@ export default function ParticleLifePage() {
         const m = sim.randomizeRules();
         setMatrix([...m]);
         setDiag((prev) => (prev ? { ...prev, started: true } : prev));
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(err);
-        setError(err?.message || 'WebGPU initialization failed');
+        const message = err instanceof Error ? err.message : String(err);
+        setError(message || 'WebGPU initialization failed');
       } finally {
         simInitRef.current.initializing = false;
       }
@@ -165,7 +166,7 @@ export default function ParticleLifePage() {
                 <span className="w-1 h-4 bg-blue-600"></span>
                 控制面板
               </h2>
-              <p className="text-[10px] text-zinc-500 font-mono mt-1 uppercase">/// WebGPU 加速</p>
+              <p className="text-[10px] text-zinc-500 font-mono mt-1 uppercase">{'/// WebGPU 加速'}</p>
             </div>
 
             <div className="space-y-5">
@@ -282,8 +283,8 @@ export default function ParticleLifePage() {
               <ul className="text-xs text-zinc-600 space-y-1 list-disc pl-4">
                 <li>绿色 (正值) = 吸引</li>
                 <li>红色 (负值) = 排斥</li>
-                <li>调整 "作用力系数" 以增强交互效果</li>
-                <li>"摩擦系数" 可稳定混沌运动</li>
+                <li>调整 “作用力系数” 以增强交互效果</li>
+                <li>“摩擦系数” 可稳定混沌运动</li>
               </ul>
             </div>
           </div>

@@ -57,6 +57,9 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.0.4(@types/react@19.0.12)
+      '@webgpu/types':
+        specifier: ^0.1.67
+        version: 0.1.69
       daisyui:
         specifier: ^5.0.12
         version: 5.0.12
@@ -1035,6 +1038,9 @@ packages:
 
   '@vitest/utils@2.1.9':
     resolution: {integrity: sha512-v0psaMSkNJ3A2NMrUEHFRzJtDPFn+/VWZ5WxImB21T9fjucJRmS7xCS3ppEnARb9y11OAzaD+P2Ps+b+BGX5iQ==, tarball: https://registry.npmmirror.com/@vitest/utils/-/utils-2.1.9.tgz}
+
+  '@webgpu/types@0.1.69':
+    resolution: {integrity: sha512-RPmm6kgRbI8e98zSD3RVACvnuktIja5+yLgDAkTmxLr90BEwdTXRQWNLF3ETTTyH/8mKhznZuN5AveXYFEsMGQ==, tarball: https://registry.npmmirror.com/@webgpu/types/-/types-0.1.69.tgz}
 
   abbrev@1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==, tarball: https://registry.npmmirror.com/abbrev/-/abbrev-1.1.1.tgz}
@@ -3658,6 +3664,8 @@ snapshots:
       '@vitest/pretty-format': 2.1.9
       loupe: 3.2.1
       tinyrainbow: 1.2.0
+
+  '@webgpu/types@0.1.69': {}
 
   abbrev@1.1.1: {}
 

@@ -204,8 +204,8 @@ export class ParticleLifeSim {
 
   private async createCheckedShaderModule(code: string, label: string) {
     if (!this.device) throw new Error('WebGPU device not initialized');
-    const module = this.device.createShaderModule({ code, label });
-    const info = await module.getCompilationInfo();
+    const shaderModule = this.device.createShaderModule({ code, label });
+    const info = await shaderModule.getCompilationInfo();
     const errors = info.messages.filter((m) => m.type === 'error');
     if (errors.length > 0) {
       const details = errors
@@ -213,7 +213,7 @@ export class ParticleLifeSim {
         .join('\n');
       throw new Error(`${label}\n${details}`);
     }
-    return module;
+    return shaderModule;
   }
 
   private async initPipelines(format: GPUTextureFormat) {
