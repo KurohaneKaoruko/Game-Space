@@ -22,41 +22,12 @@ function formatPercent(n: number) {
 
 export default function SimulationCanvas({ simRef, params, paused, showTrail, trailLength, showEnergy, resetToken }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const draggingRef = useRef(false);
-  const dragIndexRef = useRef<number | null>(null);
   const accRef = useRef(0);
 
   const settingsRef = useRef({ paused, showTrail, trailLength, showEnergy, resetToken, params });
   useEffect(() => {
     settingsRef.current = { paused, showTrail, trailLength, showEnergy, resetToken, params };
   }, [paused, showTrail, trailLength, showEnergy, resetToken, params]);
-
-  useEffect(() => {
-    const endDrag = () => {
-      if (!draggingRef.current) return;
-      draggingRef.current = false;
-      dragIndexRef.current = null;
-      simRef.current.endDrag();
-    };
-
-    const onPointerUpOrCancel = () => endDrag();
-    const onBlur = () => endDrag();
-    const onVisibilityChange = () => {
-      if (document.hidden) endDrag();
-    };
-
-    window.addEventListener('pointerup', onPointerUpOrCancel);
-    window.addEventListener('pointercancel', onPointerUpOrCancel);
-    window.addEventListener('blur', onBlur);
-    document.addEventListener('visibilitychange', onVisibilityChange);
-
-    return () => {
-      window.removeEventListener('pointerup', onPointerUpOrCancel);
-      window.removeEventListener('pointercancel', onPointerUpOrCancel);
-      window.removeEventListener('blur', onBlur);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-    };
-  }, [simRef]);
 
   const lastResetTokenRef = useRef(resetToken);
   const baseEnergyRef = useRef<number | null>(null);
@@ -98,6 +69,15 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
     const fixedDt = 1 / 240;
     const maxStepsPerFrame = 8 * 240;
 
+    const getTransform = () => {
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      const origin = { x: w / 2, y: h * 0.22 };
+      const scale = Math.max(10, (Math.min(w, h) * 0.38) / Math.max(0.1, totalLength));
+      return { rect, origin, scale };
+    };
+
     const worldToScreen = (p: Vec2, origin: Vec2, scale: number) => ({ x: origin.x + p.x * scale, y: origin.y + p.y * scale });
 
     const loop = () => {
@@ -105,12 +85,9 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
       const dt = Math.min(0.05, (now - lastMs) / 1000);
       lastMs = now;
 
-      const rect = canvas.getBoundingClientRect();
+      const { rect, origin, scale } = getTransform();
       const w = rect.width;
       const h = rect.height;
-
-      const origin = { x: w / 2, y: h * 0.22 };
-      const scale = Math.max(10, (Math.min(w, h) * 0.38) / Math.max(0.1, totalLength));
 
       const { paused: pausedNow, showTrail: trailOn, trailLength: trailN, showEnergy: energyOn, resetToken: resetNow, params: paramsNow } =
         settingsRef.current;
@@ -123,8 +100,7 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
         accRef.current = 0;
       }
 
-      if (!pausedNow && !draggingRef.current) accRef.current += dt;
-      if (draggingRef.current) simRef.current.relax();
+      if (!pausedNow) accRef.current += dt;
       let steps = 0;
       while (accRef.current >= fixedDt && steps < maxStepsPerFrame) {
         simRef.current.step(fixedDt);
@@ -297,69 +273,6 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
     };
   }, [simRef, totalLength]);
 
-  const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    const canvas = e.currentTarget;
-    const rect = canvas.getBoundingClientRect();
-    const w = rect.width;
-    const h = rect.height;
-    const origin = { x: w / 2, y: h * 0.22 };
-    const scale = Math.max(10, (Math.min(w, h) * 0.38) / Math.max(0.1, totalLength));
-
-    const pScreen = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    const snap = simRef.current.getSnapshot(1 / 240);
-    const pointsS = snap.points.map((p) => ({ x: origin.x + p.x * scale, y: origin.y + p.y * scale }));
-
-    const count = params.mode === 'double' ? 2 : 3;
-    let pick: number | null = null;
-    let pickD = Infinity;
-    for (let i = 0; i < count; i++) {
-      const d = dist(pScreen, pointsS[i]);
-      const r = 8 + 4 * Math.sqrt(Math.max(0.2, params.masses[i]));
-      if (d <= r + 10 && d < pickD) {
-        pick = i + 1;
-        pickD = d;
-      }
-    }
-    if (pick != null) {
-      draggingRef.current = true;
-      dragIndexRef.current = pick;
-      accRef.current = 0;
-      simRef.current.startDrag(pick);
-      const world = { x: (pScreen.x - origin.x) / scale, y: (pScreen.y - origin.y) / scale };
-      simRef.current.dragTo(world);
-      simRef.current.relax();
-      try {
-        canvas.setPointerCapture(e.pointerId);
-      } catch {}
-    }
-  };
-
-  const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!draggingRef.current || dragIndexRef.current == null) return;
-    e.preventDefault();
-    const canvas = e.currentTarget;
-    const rect = canvas.getBoundingClientRect();
-    const w = rect.width;
-    const h = rect.height;
-    const origin = { x: w / 2, y: h * 0.22 };
-    const scale = Math.max(10, (Math.min(w, h) * 0.38) / Math.max(0.1, totalLength));
-    const pScreen = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    const world = { x: (pScreen.x - origin.x) / scale, y: (pScreen.y - origin.y) / scale };
-    simRef.current.dragTo(world);
-    simRef.current.relax();
-  };
-
-  const onPointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!draggingRef.current) return;
-    draggingRef.current = false;
-    dragIndexRef.current = null;
-    simRef.current.endDrag();
-    try {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch {}
-  };
-
   return (
     <div className="w-full">
       <div className="w-full aspect-16/10 rounded-lg overflow-hidden bg-gray-50 border border-gray-200">
@@ -367,15 +280,11 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
           ref={canvasRef}
           className="w-full h-full touch-none"
           style={{ touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
           onContextMenu={(e) => e.preventDefault()}
         />
       </div>
       <div className="mt-2 text-xs text-gray-500">
-        鼠标/手指拖拽摆锤；参数可实时调节。能量曲线用于观察数值误差。
+        参数可实时调节。能量曲线用于观察数值误差。
       </div>
     </div>
   );

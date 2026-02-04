@@ -1,6 +1,7 @@
 'use client';
 
 import type { PendulumUIActions, PendulumUIState } from '../function/usePendulumSimController';
+import { useState } from 'react';
 
 function Field({
   label,
@@ -46,6 +47,7 @@ function Field({
 
 export default function ControlsPanel({ ui, actions }: { ui: PendulumUIState; actions: PendulumUIActions }) {
   const count = ui.params.mode === 'double' ? 2 : 3;
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
     <div className="p-6 space-y-6">
@@ -55,11 +57,26 @@ export default function ControlsPanel({ ui, actions }: { ui: PendulumUIState; ac
             <span className="w-1 h-4 bg-blue-600"></span>
             控制面板 (CONTROL_PANEL)
           </h2>
-          <p className="text-[10px] text-zinc-500 font-mono mt-1 uppercase">{'/// 支持拖拽交互 (DRAG_INTERACTION_ENABLED)'}</p>
+          <p className="text-[10px] text-zinc-500 font-mono mt-1 uppercase">{'/// 参数调节 (PARAMETER_TUNING)'}</p>
         </div>
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="p-1 text-zinc-400 hover:text-zinc-900 transition-colors"
+        >
+          <svg
+            className={`w-5 h-5 transition-transform duration-200 ${isCollapsed ? 'rotate-180' : ''}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      {!isCollapsed && (
+        <>
+          <div className="grid grid-cols-2 gap-2">
         <button
           onClick={actions.reset}
           className="inline-flex items-center justify-center px-4 py-2 bg-zinc-50 hover:bg-white border border-zinc-200 hover:border-blue-500/50 text-zinc-600 hover:text-blue-600 text-xs font-bold tracking-widest uppercase transition-all shadow-sm"
@@ -149,6 +166,8 @@ export default function ControlsPanel({ ui, actions }: { ui: PendulumUIState; ac
         </label>
         <Field label="轨迹长度 (LENGTH)" value={ui.trailLength} min={20} max={2000} step={10} onChange={(n) => actions.setTrailLength(Math.round(n))} />
       </div>
+        </>
+      )}
     </div>
   );
 }

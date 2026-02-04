@@ -11,14 +11,9 @@ export const defaultPendulumParams: PendulumParams = {
   anglesDeg: [120, -10, 30],
 };
 
-type DragState =
-  | { active: false }
-  | { active: true; index: number; world: Vec2 };
-
 export class PendulumSimulation {
   private params: PendulumParams;
   private t = 0;
-  private drag: DragState = { active: false };
   private q: number[] = [];
   private qDot: number[] = [];
 
@@ -45,7 +40,6 @@ export class PendulumSimulation {
     if (params) this.params = { ...this.params, ...params };
 
     this.t = 0;
-    this.drag = { active: false };
 
     const n = this.params.mode === 'double' ? 2 : 3;
     const anglesRad = this.params.anglesDeg.slice(0, n).map((a) => (a * Math.PI) / 180);
@@ -59,11 +53,6 @@ export class PendulumSimulation {
     const perDt = dt / s;
 
     for (let i = 0; i < s; i++) {
-      if (this.drag.active) {
-        this.applyDragIK(8);
-        this.qDot = new Array(this.qDot.length).fill(0);
-      }
-
       const qDDot = this.computeAccelerations();
       for (let k = 0; k < this.q.length; k++) this.qDot[k] += qDDot[k] * perDt;
       for (let k = 0; k < this.q.length; k++) this.q[k] += this.qDot[k] * perDt;
@@ -72,26 +61,7 @@ export class PendulumSimulation {
   }
 
   relax(iterations?: number) {
-    if (this.drag.active) this.applyDragIK(iterations ?? 8);
-  }
-
-  startDrag(index: number) {
-    const count = this.params.mode === 'double' ? 2 : 3;
-    if (index < 1 || index > count) return;
-    const points = this.computePoints();
-    this.drag = { active: true, index, world: { ...points[index - 1] } };
-    this.qDot = new Array(this.qDot.length).fill(0);
-  }
-
-  dragTo(world: Vec2) {
-    if (!this.drag.active) return;
-    this.drag = { ...this.drag, world };
-  }
-
-  endDrag() {
-    if (!this.drag.active) return;
-    this.drag = { active: false };
-    this.qDot = new Array(this.qDot.length).fill(0);
+    // No-op without drag
   }
 
   getSnapshot(dtForEnergy = 1 / 240): PendulumSnapshot {
@@ -213,40 +183,6 @@ export class PendulumSimulation {
     for (let i = 0; i < n; i++) rhs[i] = -(h[i] + G[i] + d * this.qDot[i]);
 
     return solveLinearSystem(M, rhs);
-  }
-
-  private applyDragIK(iterations: number) {
-    if (!this.drag.active) return;
-    const n = this.params.mode === 'double' ? 2 : 3;
-    const end = Math.min(n, Math.max(1, this.drag.index));
-    const lengths = this.params.lengths.slice(0, n).map((L) => Math.max(0.05, L));
-    const target = this.drag.world;
-
-    for (let it = 0; it < iterations; it++) {
-      let points = this.computePoints();
-      for (let j = end - 1; j >= 0; j--) {
-        const joint = j === 0 ? v(0, 0) : points[j - 1];
-        const eff = points[end - 1];
-        const vEff = sub(eff, joint);
-        const vTar = sub(target, joint);
-        const le = Math.hypot(vEff.x, vEff.y);
-        const lt = Math.hypot(vTar.x, vTar.y);
-        if (le <= 1e-9 || lt <= 1e-9) continue;
-        const ex = vEff.x / le;
-        const ey = vEff.y / le;
-        const tx = vTar.x / lt;
-        const ty = vTar.y / lt;
-        const dot = ex * tx + ey * ty;
-        const cross = ex * ty - ey * tx;
-        const ang = Math.atan2(cross, dot);
-        this.q[j] += ang;
-        points = this.computePoints();
-      }
-
-      const endEff = this.computePoints()[end - 1];
-      const err = dist(endEff, target);
-      if (err < 1e-3 * lengths.reduce((a, b) => a + b, 0)) break;
-    }
   }
 
   getConstraintErrors(): number[] {

@@ -32,15 +32,18 @@ export const games: Project[] = [
     technologies: ['React', 'TypeScript', 'Next.js', 'Tailwind CSS'],
     link: '/games/Snake'
   },
+];
+
+export const simulations: Project[] = [
   {
     id: 'PendulumSim',
     title: '混沌摆模拟',
     description: '基于约束物理与数值积分的双摆/三摆模拟：支持拖拽调参，显示轨迹与能量变化曲线。',
     image: '/images/pendulum-sim.svg',
     technologies: ['React', 'TypeScript', 'Next.js', 'Canvas'],
-    link: '/games/PendulumSim'
+    link: '/simulations/PendulumSim'
   },
-]; 
+];
 
 export const tools: Project[] = [
   {
