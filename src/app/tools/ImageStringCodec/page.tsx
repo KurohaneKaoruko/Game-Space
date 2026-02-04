@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Navigation from '../../components/Navigation';
-import { decodeImageString, encodeImageBytes } from '../../../utils/imageStringCodec';
+import { decodeImageString, encodeImageBytes, VERSION_BASE91, VERSION_BASE32K } from '../../../utils/imageStringCodec';
 
 type OutputFormat = 'image/webp' | 'image/jpeg';
 type Mode = 'encode' | 'decode';
+type EncodingVersion = typeof VERSION_BASE91 | typeof VERSION_BASE32K;
 
 function bytesToSize(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes < 0) return '-';
@@ -70,6 +71,7 @@ export default function ImageStringCodecPage() {
   const [encodeInputBytes, setEncodeInputBytes] = useState<number>(0);
   const [encodeOutputMime, setEncodeOutputMime] = useState<string>('');
   const [encodeOutputBytes, setEncodeOutputBytes] = useState<number>(0);
+  const [encodingVersion, setEncodingVersion] = useState<EncodingVersion>(VERSION_BASE32K);
 
   const [compressEnabled, setCompressEnabled] = useState<boolean>(true);
   const [outputFormat, setOutputFormat] = useState<OutputFormat>('image/webp');
@@ -153,7 +155,7 @@ export default function ImageStringCodecPage() {
         ? await reencodeImage(encodeFile, { mime: outputFormat, quality })
         : await fileToBytes(encodeFile);
 
-      const encoded = encodeImageBytes({ bytes, mime });
+      const encoded = encodeImageBytes({ bytes, mime }, encodingVersion);
       setEncodeOutputMime(mime);
       setEncodeOutputBytes(bytes.byteLength);
       setEncodeResult(encoded);
@@ -232,8 +234,8 @@ export default function ImageStringCodecPage() {
                         <h1 className="text-sm font-bold text-zinc-900 tracking-tight">IMAGE_PROCESSOR</h1>
                      </div>
                      <div className="flex bg-zinc-100 p-0.5 rounded-md border border-zinc-200">
-                        <button onClick={() => setMode('encode')} className={`flex-1 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm transition-all ${mode === 'encode' ? 'bg-white text-blue-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>编码</button>
-                        <button onClick={() => setMode('decode')} className={`flex-1 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm transition-all ${mode === 'decode' ? 'bg-white text-blue-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>解码</button>
+                        <button onClick={() => setMode('encode')} className={`flex-1 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm transition-all ${mode === 'encode' ? 'bg-white text-blue-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>编码 (ENCODE)</button>
+                        <button onClick={() => setMode('decode')} className={`flex-1 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm transition-all ${mode === 'decode' ? 'bg-white text-blue-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>解码 (DECODE)</button>
                      </div>
                   </div>
 
@@ -272,7 +274,7 @@ export default function ImageStringCodecPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between border-t border-zinc-100 pt-4">
+                    <div className="flex items-center justify-between border-t border-zinc-100">
                       <label className="flex items-center gap-3 text-sm text-zinc-600 cursor-pointer group">
                         <div className={`w-4 h-4 border flex items-center justify-center transition-colors rounded ${compressEnabled ? 'border-blue-600 bg-blue-600' : 'border-zinc-300 bg-white'}`}>
                           {compressEnabled && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
@@ -289,6 +291,18 @@ export default function ImageStringCodecPage() {
                     </div>
 
                     <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-[10px] text-zinc-500 font-mono uppercase mb-2">编码算法 (ALGORITHM)</label>
+                        <select
+                          value={encodingVersion}
+                          onChange={(e) => setEncodingVersion(Number(e.target.value) as EncodingVersion)}
+                          className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 px-3 py-2 text-sm font-mono focus:border-blue-500 focus:outline-none rounded-md"
+                        >
+                          <option value={VERSION_BASE32K}>Base32k (Extreme Compression)</option>
+                          <option value={VERSION_BASE91}>Base91 + RLE (Legacy)</option>
+                        </select>
+                      </div>
+
                       <div>
                         <label className="block text-[10px] text-zinc-500 font-mono uppercase mb-2">输出格式 (FORMAT)</label>
                         <select
@@ -430,8 +444,8 @@ export default function ImageStringCodecPage() {
                         <h1 className="text-sm font-bold text-zinc-900 tracking-tight">IMAGE_PROCESSOR</h1>
                      </div>
                      <div className="flex bg-zinc-100 p-0.5 rounded-md border border-zinc-200">
-                        <button onClick={() => setMode('encode')} className={`flex-1 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm transition-all ${mode === 'encode' ? 'bg-white text-blue-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>编码</button>
-                        <button onClick={() => setMode('decode')} className={`flex-1 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm transition-all ${mode === 'decode' ? 'bg-white text-blue-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>解码</button>
+                        <button onClick={() => setMode('encode')} className={`flex-1 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm transition-all ${mode === 'encode' ? 'bg-white text-blue-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>编码 (ENCODE)</button>
+                        <button onClick={() => setMode('decode')} className={`flex-1 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm transition-all ${mode === 'decode' ? 'bg-white text-blue-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>解码 (DECODE)</button>
                      </div>
                   </div>
 
