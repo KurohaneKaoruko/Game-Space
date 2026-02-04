@@ -8,12 +8,13 @@ import {
   encodeImageBytesAsync, 
   VERSION_BASE91, 
   VERSION_BASE32K, 
-  VERSION_GZIP_BASE32K 
+  VERSION_GZIP_BASE32K,
+  VERSION_AUTO
 } from '../../../utils/imageStringCodec';
 
 type OutputFormat = 'image/webp' | 'image/jpeg';
 type Mode = 'encode' | 'decode';
-type EncodingVersion = typeof VERSION_BASE91 | typeof VERSION_BASE32K | typeof VERSION_GZIP_BASE32K;
+type EncodingVersion = typeof VERSION_BASE91 | typeof VERSION_BASE32K | typeof VERSION_GZIP_BASE32K | typeof VERSION_AUTO;
 
 function bytesToSize(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes < 0) return '-';
@@ -78,7 +79,7 @@ export default function ImageStringCodecPage() {
   const [encodeInputBytes, setEncodeInputBytes] = useState<number>(0);
   const [encodeOutputMime, setEncodeOutputMime] = useState<string>('');
   const [encodeOutputBytes, setEncodeOutputBytes] = useState<number>(0);
-  const [encodingVersion, setEncodingVersion] = useState<EncodingVersion>(VERSION_BASE32K);
+  const [encodingVersion, setEncodingVersion] = useState<EncodingVersion>(VERSION_AUTO);
 
   const [compressEnabled, setCompressEnabled] = useState<boolean>(true);
   const [outputFormat, setOutputFormat] = useState<OutputFormat>('image/webp');
@@ -305,6 +306,7 @@ export default function ImageStringCodecPage() {
                           onChange={(e) => setEncodingVersion(Number(e.target.value) as EncodingVersion)}
                           className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 px-3 py-2 text-sm font-mono focus:border-blue-500 focus:outline-none rounded-md"
                         >
+                          <option value={VERSION_AUTO}>Auto (Best)</option>
                           <option value={VERSION_BASE32K}>Base32k (Standard)</option>
                           <option value={VERSION_GZIP_BASE32K}>Base32k + Gzip (High Compression)</option>
                           <option value={VERSION_BASE91}>Base91 + RLE (Legacy)</option>
