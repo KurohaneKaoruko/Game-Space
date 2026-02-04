@@ -36,6 +36,14 @@ export const games: Project[] = [
 
 export const simulations: Project[] = [
   {
+    id: 'GameOfLife',
+    title: '生命游戏 (Game of Life)',
+    description: '康威生命游戏：经典的元胞自动机模拟。支持自定义网格大小、速度、颜色主题，可自由绘制初始状态。',
+    image: '/images/game-of-life.svg',
+    technologies: ['React', 'TypeScript', 'Canvas'],
+    link: '/simulations/GameOfLife'
+  },
+  {
     id: 'ParticleLife',
     title: '粒子生命 (Particle Life)',
     description: '基于 WebGPU 加速的粒子人工生命模拟。数千个粒子根据简单的交互矩阵涌现出复杂的类生命行为。',

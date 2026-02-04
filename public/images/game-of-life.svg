@@ -1,0 +1,46 @@
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="600" fill="#18181B"/>
+  
+  <!-- Grid lines (faint) -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#27272A" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="600" fill="url(#grid)" />
+
+  <!-- Glider -->
+  <g transform="translate(100, 100) scale(1.5)">
+    <rect x="40" y="0" width="38" height="38" fill="#10B981"/>
+    <rect x="80" y="40" width="38" height="38" fill="#10B981"/>
+    <rect x="0" y="80" width="38" height="38" fill="#10B981"/>
+    <rect x="40" y="80" width="38" height="38" fill="#10B981"/>
+    <rect x="80" y="80" width="38" height="38" fill="#10B981"/>
+  </g>
+
+  <!-- Glider Gun (Static representation of parts) -->
+  <!-- Left Block -->
+  <g transform="translate(100, 300)">
+    <rect x="0" y="40" width="38" height="38" fill="#10B981"/>
+    <rect x="40" y="40" width="38" height="38" fill="#10B981"/>
+    <rect x="0" y="80" width="38" height="38" fill="#10B981"/>
+    <rect x="40" y="80" width="38" height="38" fill="#10B981"/>
+  </g>
+  
+  <!-- Right Ship -->
+  <g transform="translate(400, 280)">
+     <rect x="0" y="0" width="38" height="38" fill="#10B981"/>
+     <rect x="0" y="40" width="38" height="38" fill="#10B981"/>
+     <rect x="40" y="0" width="38" height="38" fill="#10B981"/>
+     <rect x="40" y="80" width="38" height="38" fill="#10B981"/>
+     <rect x="80" y="0" width="38" height="38" fill="#10B981"/>
+  </g>
+
+  <!-- Random scatter -->
+  <g transform="translate(500, 100)">
+    <rect x="0" y="0" width="38" height="38" fill="#34D399" opacity="0.5"/>
+    <rect x="40" y="40" width="38" height="38" fill="#34D399" opacity="0.5"/>
+    <rect x="80" y="0" width="38" height="38" fill="#34D399" opacity="0.5"/>
+  </g>
+
+</svg>
