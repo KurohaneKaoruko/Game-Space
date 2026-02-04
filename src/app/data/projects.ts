@@ -36,6 +36,14 @@ export const games: Project[] = [
 
 export const simulations: Project[] = [
   {
+    id: 'ParticleLife',
+    title: '粒子生命 (Particle Life)',
+    description: '基于 WebGPU 加速的粒子人工生命模拟。数千个粒子根据简单的交互矩阵涌现出复杂的类生命行为。',
+    image: '/images/particle-life.svg',
+    technologies: ['React', 'WebGPU', 'WGSL', 'TypeScript'],
+    link: '/simulations/ParticleLife'
+  },
+  {
     id: 'PendulumSim',
     title: '混沌摆模拟',
     description: '基于约束物理与数值积分的双摆/三摆模拟：支持拖拽调参，显示轨迹与能量变化曲线。',
