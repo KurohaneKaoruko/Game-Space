@@ -22,6 +22,47 @@ const DEFAULT_CONFIG: SimulationConfig = {
   ]
 };
 
+type Preset = {
+  name: string;
+  config: Partial<SimulationConfig>;
+  matrix?: number[]; // Flattened NxN
+};
+
+// Known stable configurations
+const PRESETS: Preset[] = [
+  {
+    name: '混沌 (Chaos)',
+    config: { friction: 0.9, forceFactor: 10, rMax: 80 },
+    // No fixed matrix, uses random
+  },
+  {
+    name: '细胞 (Cells)',
+    config: { friction: 0.8, forceFactor: 12, rMax: 40, colorsCount: 6 },
+    // Self-assembling clusters
+    matrix: [
+      1.0, -0.1, 0.3, -0.1, 0.3, -0.1,
+      -0.1, 1.0, -0.1, 0.3, -0.1, 0.3,
+      0.3, -0.1, 1.0, -0.1, 0.3, -0.1,
+      -0.1, 0.3, -0.1, 1.0, -0.1, 0.3,
+      0.3, -0.1, 0.3, -0.1, 1.0, -0.1,
+      -0.1, 0.3, -0.1, 0.3, -0.1, 1.0
+    ]
+  },
+  {
+    name: '蛇 (Snake)',
+    config: { friction: 0.85, forceFactor: 20, rMax: 60, colorsCount: 6 },
+    // Chains chasing each other
+    matrix: [
+      0.2, 0.8, -0.2, 0.0, 0.0, 0.0,
+      0.0, 0.2, 0.8, -0.2, 0.0, 0.0,
+      0.0, 0.0, 0.2, 0.8, -0.2, 0.0,
+      0.0, 0.0, 0.0, 0.2, 0.8, -0.2,
+      -0.2, 0.0, 0.0, 0.0, 0.2, 0.8,
+      0.8, -0.2, 0.0, 0.0, 0.0, 0.2
+    ]
+  },
+];
+
 export default function ParticleLifePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasWrapRef = useRef<HTMLDivElement>(null);
@@ -127,6 +168,23 @@ export default function ParticleLifePage() {
     }
   };
 
+  const loadPreset = (preset: Preset) => {
+    const newConfig = { ...config, ...preset.config };
+    setConfig(newConfig);
+    
+    let newMatrix = preset.matrix;
+    if (!newMatrix && simRef.current) {
+      newMatrix = simRef.current.generateRandomMatrix(newConfig.colorsCount);
+    }
+    
+    if (newMatrix) {
+      setMatrix(newMatrix);
+      if (simRef.current) {
+        simRef.current.setConfig({ ...newConfig, matrix: newMatrix });
+      }
+    }
+  };
+
   return (
     <div className="h-screen overflow-hidden bg-zinc-50 flex flex-col">
       <Navigation title="PARTICLE_LIFE" />
@@ -170,6 +228,19 @@ export default function ParticleLifePage() {
             </div>
 
             <div className="space-y-5">
+              <div className="text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">预设 (Presets)</div>
+              <div className="grid grid-cols-2 gap-2">
+                {PRESETS.map((preset) => (
+                  <button
+                    key={preset.name}
+                    onClick={() => loadPreset(preset)}
+                    className="px-3 py-2 bg-zinc-100 hover:bg-blue-50 hover:text-blue-600 text-zinc-600 text-xs font-medium rounded-md transition-colors text-left"
+                  >
+                    {preset.name}
+                  </button>
+                ))}
+              </div>
+
               <div className="text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">全局参数</div>
               <ControlSlider 
                 label="摩擦系数 (Friction)" 
