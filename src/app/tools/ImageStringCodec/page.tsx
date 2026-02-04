@@ -1,12 +1,19 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import Navigation from '../../components/Navigation';
-import { decodeImageString, encodeImageBytes, VERSION_BASE91, VERSION_BASE32K } from '../../../utils/imageStringCodec';
+import { 
+  decodeImageStringAsync, 
+  encodeImageBytesAsync, 
+  VERSION_BASE91, 
+  VERSION_BASE32K, 
+  VERSION_GZIP_BASE32K 
+} from '../../../utils/imageStringCodec';
 
 type OutputFormat = 'image/webp' | 'image/jpeg';
 type Mode = 'encode' | 'decode';
-type EncodingVersion = typeof VERSION_BASE91 | typeof VERSION_BASE32K;
+type EncodingVersion = typeof VERSION_BASE91 | typeof VERSION_BASE32K | typeof VERSION_GZIP_BASE32K;
 
 function bytesToSize(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes < 0) return '-';
@@ -155,7 +162,7 @@ export default function ImageStringCodecPage() {
         ? await reencodeImage(encodeFile, { mime: outputFormat, quality })
         : await fileToBytes(encodeFile);
 
-      const encoded = encodeImageBytes({ bytes, mime }, encodingVersion);
+      const encoded = await encodeImageBytesAsync({ bytes, mime }, encodingVersion);
       setEncodeOutputMime(mime);
       setEncodeOutputBytes(bytes.byteLength);
       setEncodeResult(encoded);
@@ -181,7 +188,7 @@ export default function ImageStringCodecPage() {
     setDecodedMime('');
   }
 
-  function onDecode() {
+  async function onDecode() {
     setDecodeError('');
     setDecodedBytes(null);
     setDecodedMime('');
@@ -192,7 +199,7 @@ export default function ImageStringCodecPage() {
     }
 
     try {
-      const decoded = decodeImageString(decodeInputTrimmed);
+      const decoded = await decodeImageStringAsync(decodeInputTrimmed);
       setDecodedBytes(decoded.bytes);
       setDecodedMime(decoded.mime);
     } catch (e) {
@@ -230,12 +237,12 @@ export default function ImageStringCodecPage() {
                 <section className="bg-zinc-50 tech-border p-4 lg:w-[280px] lg:shrink-0 border border-zinc-200 shadow-sm transition-all duration-300 flex flex-col overflow-y-auto">
                   <div className="flex flex-col gap-3 mb-4 pb-3 border-b border-zinc-200">
                      <div className="flex items-center gap-2">
-                        <div className={`w-1.5 h-1.5 rounded-full ${mode === 'encode' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)] animate-pulse'}`}></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse"></div>
                         <h1 className="text-sm font-bold text-zinc-900 tracking-tight">IMAGE_PROCESSOR</h1>
                      </div>
                      <div className="flex bg-zinc-100 p-0.5 rounded-md border border-zinc-200">
-                        <button onClick={() => setMode('encode')} className={`flex-1 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm transition-all ${mode === 'encode' ? 'bg-white text-blue-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>编码 (ENCODE)</button>
-                        <button onClick={() => setMode('decode')} className={`flex-1 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm transition-all ${mode === 'decode' ? 'bg-white text-blue-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>解码 (DECODE)</button>
+                        <button onClick={() => setMode('encode')} className="flex-1 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm transition-all bg-white text-blue-600 shadow-sm">编码 (ENCODE)</button>
+                        <button onClick={() => setMode('decode')} className="flex-1 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm transition-all text-zinc-500 hover:text-zinc-900">解码 (DECODE)</button>
                      </div>
                   </div>
 
@@ -298,7 +305,8 @@ export default function ImageStringCodecPage() {
                           onChange={(e) => setEncodingVersion(Number(e.target.value) as EncodingVersion)}
                           className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 px-3 py-2 text-sm font-mono focus:border-blue-500 focus:outline-none rounded-md"
                         >
-                          <option value={VERSION_BASE32K}>Base32k (Extreme Compression)</option>
+                          <option value={VERSION_BASE32K}>Base32k (Standard)</option>
+                          <option value={VERSION_GZIP_BASE32K}>Base32k + Gzip (High Compression)</option>
                           <option value={VERSION_BASE91}>Base91 + RLE (Legacy)</option>
                         </select>
                       </div>
@@ -389,10 +397,12 @@ export default function ImageStringCodecPage() {
 
                       {encodePreviewUrl ? (
                         <>
-                          <img 
+                          <Image 
                             src={encodePreviewUrl} 
                             alt="预览" 
-                            className={`w-full h-full ${previewFit === 'contain' ? 'object-contain' : 'object-cover'} relative z-10 transition-all duration-300`}
+                            fill
+                            unoptimized
+                            className={`object-${previewFit} relative z-10 transition-all duration-300`}
                             onLoad={(e) => setImgDims({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
                           />
                           {/* HUD Bar */}
@@ -440,12 +450,12 @@ export default function ImageStringCodecPage() {
                 <section className="bg-zinc-50 tech-border p-4 lg:w-[280px] lg:shrink-0 border border-zinc-200 shadow-sm transition-all duration-300 flex flex-col overflow-y-auto">
                   <div className="flex flex-col gap-3 mb-4 pb-3 border-b border-zinc-200">
                      <div className="flex items-center gap-2">
-                        <div className={`w-1.5 h-1.5 rounded-full ${mode === 'encode' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)] animate-pulse'}`}></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)] animate-pulse"></div>
                         <h1 className="text-sm font-bold text-zinc-900 tracking-tight">IMAGE_PROCESSOR</h1>
                      </div>
                      <div className="flex bg-zinc-100 p-0.5 rounded-md border border-zinc-200">
-                        <button onClick={() => setMode('encode')} className={`flex-1 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm transition-all ${mode === 'encode' ? 'bg-white text-blue-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>编码 (ENCODE)</button>
-                        <button onClick={() => setMode('decode')} className={`flex-1 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm transition-all ${mode === 'decode' ? 'bg-white text-blue-600 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>解码 (DECODE)</button>
+                        <button onClick={() => setMode('encode')} className="flex-1 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm transition-all text-zinc-500 hover:text-zinc-900">编码 (ENCODE)</button>
+                        <button onClick={() => setMode('decode')} className="flex-1 py-1 text-[10px] font-bold tracking-wider uppercase rounded-sm transition-all bg-white text-blue-600 shadow-sm">解码 (DECODE)</button>
                      </div>
                   </div>
 
@@ -536,10 +546,12 @@ export default function ImageStringCodecPage() {
 
                       {decodePreviewUrl ? (
                         <>
-                          <img 
+                          <Image 
                             src={decodePreviewUrl} 
                             alt="解码预览" 
-                            className={`w-full h-full ${previewFit === 'contain' ? 'object-contain' : 'object-cover'} relative z-10 transition-all duration-300`}
+                            fill
+                            unoptimized
+                            className={`object-${previewFit} relative z-10 transition-all duration-300`}
                             onLoad={(e) => setImgDims({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
                           />
                           {/* HUD Bar */}

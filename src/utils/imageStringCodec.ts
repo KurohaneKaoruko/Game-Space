@@ -1,3 +1,5 @@
+import { base91Decode, base91Encode, base91Alphabet } from './base91';
+
 export type ImageStringCodecDecoded = {
   version: number;
   mime: string;
@@ -7,6 +9,9 @@ export type ImageStringCodecDecoded = {
 // Versions
 export const VERSION_BASE91 = 1;
 export const VERSION_BASE32K = 2;
+export const VERSION_GZIP_BASE32K = 3;
+
+export const CODEC_PREFIX = 'IMG#';
 
 const MIME_BY_ID: Record<number, string> = {
   0: 'image/png',
@@ -87,9 +92,6 @@ function base32kDecode(input: string): Uint8Array {
   return out.slice(0, outOffset);
 }
 
-// Re-add Base91 logic for compatibility and choice
-import { base91Decode, base91Encode, base91Alphabet } from './base91';
-
 // RLE Constants for Base91
 const B91_CHARS = base91Alphabet();
 const RLE_QUOTE = '"';
@@ -148,7 +150,24 @@ function rleDecode(input: string): string {
   return out;
 }
 
-export function encodeImageBytes(input: { bytes: Uint8Array; mime: string }, version: number = VERSION_BASE32K): string {
+// Compression Helpers (Gzip)
+async function compressData(data: Uint8Array): Promise<Uint8Array> {
+  const stream = new CompressionStream('gzip');
+  const writer = stream.writable.getWriter();
+  writer.write(data as any);
+  writer.close();
+  return new Response(stream.readable).arrayBuffer().then(b => new Uint8Array(b));
+}
+
+async function decompressData(data: Uint8Array): Promise<Uint8Array> {
+  const stream = new DecompressionStream('gzip');
+  const writer = stream.writable.getWriter();
+  writer.write(data as any);
+  writer.close();
+  return new Response(stream.readable).arrayBuffer().then(b => new Uint8Array(b));
+}
+
+function buildPacket(input: { bytes: Uint8Array; mime: string }, version: number): Uint8Array {
   const mimeId = ID_BY_MIME[input.mime];
 
   let header: Uint8Array;
@@ -171,29 +190,75 @@ export function encodeImageBytes(input: { bytes: Uint8Array; mime: string }, ver
   const merged = new Uint8Array(header.length + input.bytes.length);
   merged.set(header, 0);
   merged.set(input.bytes, header.length);
+  return merged;
+}
+
+/**
+ * Synchronous encoding (only for V1/V2).
+ * Throws if V3 is requested.
+ */
+export function encodeImageBytes(input: { bytes: Uint8Array; mime: string }, version: number = VERSION_BASE32K): string {
+  if (version === VERSION_GZIP_BASE32K) {
+    throw new Error('Use encodeImageBytesAsync for GZIP version');
+  }
+
+  const merged = buildPacket(input, version);
+  let encoded = '';
   
   if (version === VERSION_BASE32K) {
-    return base32kEncode(merged);
+    encoded = base32kEncode(merged);
   } else {
     // Fallback to Base91 + RLE (Version 1)
     const base91Str = base91Encode(merged);
-    return rleEncode(base91Str);
+    encoded = rleEncode(base91Str);
   }
+
+  return CODEC_PREFIX + encoded;
 }
 
+/**
+ * Async encoding (supports all versions).
+ */
+export async function encodeImageBytesAsync(input: { bytes: Uint8Array; mime: string }, version: number = VERSION_BASE32K): Promise<string> {
+  if (version !== VERSION_GZIP_BASE32K) {
+    return encodeImageBytes(input, version);
+  }
+
+  // Version 3: Gzip
+  // 1. Build packet as if it is Version 3
+  const innerPacket = buildPacket(input, version);
+  // 2. Compress
+  const compressed = await compressData(innerPacket);
+  // 3. Prepend version byte (3) to compressed data so we know it is V3
+  const finalBytes = new Uint8Array(1 + compressed.length);
+  finalBytes[0] = version;
+  finalBytes.set(compressed, 1);
+
+  // 4. Encode to Base32k
+  return CODEC_PREFIX + base32kEncode(finalBytes);
+}
+
+/**
+ * Synchronous decoding (only for V1/V2).
+ * Throws if V3 is encountered.
+ */
 export function decodeImageString(input: string): ImageStringCodecDecoded {
+  let cleanInput = input;
+  if (input.startsWith(CODEC_PREFIX)) {
+    cleanInput = input.slice(CODEC_PREFIX.length);
+  }
+
   // Heuristic detection: if string contains CJK (high codepoints), likely Base32k
   // Base91 uses ASCII printable range (33-126).
   // Base32k uses 0x4E00+.
-  const isBase32k = input.charCodeAt(0) >= 0x4E00;
+  const isBase32k = cleanInput.length > 0 && cleanInput.charCodeAt(0) >= 0x4E00;
 
   let bytes: Uint8Array;
   
   if (isBase32k) {
-    bytes = base32kDecode(input);
+    bytes = base32kDecode(cleanInput);
   } else {
-    // Try Base91+RLE
-    const base91Str = rleDecode(input);
+    const base91Str = rleDecode(cleanInput);
     bytes = base91Decode(base91Str, { ignoreWhitespace: true });
   }
   
@@ -201,12 +266,57 @@ export function decodeImageString(input: string): ImageStringCodecDecoded {
 
   const version = bytes[0];
   
-  // We can support decoding both V1 and V2 regardless of user selection
-  // But we validate known versions
+  if (version === VERSION_GZIP_BASE32K) {
+    throw new Error('Use decodeImageStringAsync for GZIP version');
+  }
+
   if (version !== VERSION_BASE91 && version !== VERSION_BASE32K) {
      throw new Error(`Unsupported version: ${version}`);
   }
 
+  return parsePacket(bytes);
+}
+
+/**
+ * Async decoding (supports all versions).
+ */
+export async function decodeImageStringAsync(input: string): Promise<ImageStringCodecDecoded> {
+  let cleanInput = input;
+  if (input.startsWith(CODEC_PREFIX)) {
+    cleanInput = input.slice(CODEC_PREFIX.length);
+  }
+
+  const isBase32k = cleanInput.length > 0 && cleanInput.charCodeAt(0) >= 0x4E00;
+
+  let bytes: Uint8Array;
+  
+  if (isBase32k) {
+    bytes = base32kDecode(cleanInput);
+  } else {
+    const base91Str = rleDecode(cleanInput);
+    bytes = base91Decode(base91Str, { ignoreWhitespace: true });
+  }
+  
+  if (bytes.length < 1) throw new Error('Invalid payload');
+
+  const version = bytes[0];
+  
+  if (version === VERSION_GZIP_BASE32K) {
+    // 1. Get compressed data (skip version byte)
+    const compressed = bytes.slice(1);
+    // 2. Decompress
+    const innerBytes = await decompressData(compressed);
+    // 3. Parse inner packet
+    return parsePacket(innerBytes);
+  }
+
+  // Delegate to sync parsing for V1/V2
+  return parsePacket(bytes);
+}
+
+function parsePacket(bytes: Uint8Array): ImageStringCodecDecoded {
+  if (bytes.length < 2) throw new Error('Invalid payload');
+  const version = bytes[0];
   const mimeTag = bytes[1];
   let offset = 2;
 

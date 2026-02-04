@@ -19,7 +19,7 @@ function ProjectCard({ project, type }: { project: Project; type: 'GAME' | 'TOOL
         {/* 图片遮罩效果 */}
         <div className="absolute inset-0 z-10 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 mix-blend-multiply"></div>
         {/* 扫描线动画 */}
-        <div className="absolute inset-0 z-10 bg-gradient-to-b from-transparent via-blue-500/10 to-transparent translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-1000 ease-in-out"></div>
+        <div className="absolute inset-0 z-10 bg-linear-to-b from-transparent via-blue-500/10 to-transparent -translate-y-full group-hover:translate-y-full transition-transform duration-1000 ease-in-out"></div>
         
         {project.image ? (
           <Image
@@ -68,7 +68,7 @@ export default function Home() {
           <div className="relative mb-20 pl-8 border-l-2 border-blue-500/50">
             <h1 className="text-6xl md:text-8xl font-black text-zinc-900 mb-4 tracking-tighter">
               PROJECT<br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">SPACE</span>
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-blue-400">SPACE</span>
             </h1>
             <p className="text-xl text-zinc-500 max-w-2xl font-light">
               / 探索与构建 <br/>
