@@ -102,8 +102,17 @@ export class GameOfLife {
      if (col >= 0 && col < this.cols && row >= 0 && row < this.rows) {
        const idx = row * this.cols + col;
        this.grid[idx] = state ? 1 : 0;
-       // No full redraw for performance, just update this frame?
-       // Actually draw loop will catch it.
+       const x0 = col * this.cellSize;
+       const y0 = row * this.cellSize;
+       const gap = this.cellSize > 2 ? 1 : 0;
+       const drawSize = this.cellSize - gap;
+       if (state) {
+         this.ctx.fillStyle = this.cellColor;
+         this.ctx.fillRect(x0, y0, drawSize, drawSize);
+       } else {
+         this.ctx.fillStyle = this.bgColor;
+         this.ctx.fillRect(x0, y0, this.cellSize, this.cellSize);
+       }
      }
   }
 
@@ -155,8 +164,8 @@ export class GameOfLife {
             if (dx === 0 && dy === 0) continue;
             
             // Wrap around (Toroidal)
-            let nx = (x + dx + w) % w;
-            let ny = (y + dy + h) % h;
+            const nx = (x + dx + w) % w;
+            const ny = (y + dy + h) % h;
             
             if (this.grid[ny * w + nx]) {
               neighbors++;

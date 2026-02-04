@@ -20,8 +20,9 @@ struct Params {
 
 // Force Matrix: Flattened NxN matrix. Max 16 colors supported.
 struct Rules {
-  matrix : array<f32, 256>,
+  matrix : array<vec4<f32>, 64>,
   colorsCount : f32,
+  _pad0 : vec3<f32>,
 };
 
 @group(0) @binding(0) var<storage, read_write> particles : array<Particle>;
@@ -95,7 +96,9 @@ fn main(
           
           let row = u32(p.color);
           let col = u32(other.color);
-          let ruleVal = rules.matrix[row * 16u + col];
+          let idx = row * 16u + col;
+          let v = rules.matrix[idx / 4u];
+          let ruleVal = v[i32(idx % 4u)];
           
           let rNorm = dist / rMax;
           

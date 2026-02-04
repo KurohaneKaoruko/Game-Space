@@ -17,6 +17,16 @@ export default function GameOfLifePage() {
 
   // Interaction
   const isDragging = useRef(false);
+  const cellSizeRef = useRef(cellSize);
+  const colorThemeRef = useRef(colorTheme);
+
+  const applyTheme = (theme: string, sim: GameOfLife) => {
+    if (theme === 'dark') {
+      sim.setColors('#10B981', '#18181B');
+    } else {
+      sim.setColors('#000000', '#FFFFFF');
+    }
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -37,7 +47,7 @@ export default function GameOfLifePage() {
        canvas.style.width = `${rect.width}px`;
        canvas.style.height = `${rect.height}px`;
        
-       sim.resize(width, height, cellSize * dpr);
+       sim.resize(width, height, cellSizeRef.current * dpr);
     };
 
     resize();
@@ -45,24 +55,22 @@ export default function GameOfLifePage() {
     ro.observe(wrap);
     
     // Apply theme
-    applyTheme(colorTheme, sim);
+    applyTheme(colorThemeRef.current, sim);
 
     return () => {
       sim.stop();
       ro.disconnect();
     };
-  }, []); // Re-init if cellSize changes? No, handle in separate effect or resize
+  }, []);
 
   useEffect(() => {
+    cellSizeRef.current = cellSize;
     if (simRef.current) {
-        // Trigger resize to update grid resolution if cell size changes
-        // But we need to keep state? simulation logic handles resize by reset/randomize usually.
-        // Let's just update params.
         const wrap = wrapRef.current;
-        if(wrap) {
-            const rect = wrap.getBoundingClientRect();
-            const dpr = window.devicePixelRatio || 1;
-            simRef.current.resize(rect.width * dpr, rect.height * dpr, cellSize * dpr);
+        if (wrap) {
+          const rect = wrap.getBoundingClientRect();
+          const dpr = window.devicePixelRatio || 1;
+          simRef.current.resize(rect.width * dpr, rect.height * dpr, cellSize * dpr);
         }
     }
   }, [cellSize]);
@@ -74,18 +82,11 @@ export default function GameOfLifePage() {
   }, [speed]);
 
   useEffect(() => {
+    colorThemeRef.current = colorTheme;
     if (simRef.current) {
       applyTheme(colorTheme, simRef.current);
     }
   }, [colorTheme]);
-
-  const applyTheme = (theme: string, sim: GameOfLife) => {
-     if (theme === 'dark') {
-         sim.setColors('#10B981', '#18181B'); // Emerald-500, Zinc-900
-     } else {
-         sim.setColors('#000000', '#FFFFFF');
-     }
-  };
 
   const togglePlay = () => {
     if (simRef.current) {
@@ -129,15 +130,7 @@ export default function GameOfLifePage() {
     const x = (e.clientX - rect.left) * (canvasRef.current.width / rect.width);
     const y = (e.clientY - rect.top) * (canvasRef.current.height / rect.height);
     
-    simRef.current.drawCell(x, y, 1); // Draw alive
-    simRef.current.step(); // Optional: Instant feedback draw? no, manual draw inside class
-    // actually class drawCell doesn't trigger full redraw, let's force a single draw if paused
-    // If running, loop handles it.
-    if (!isRunning) {
-        // simRef.current.draw(); // Exposed private?
-        // Let's make draw public or step without update
-        // Workaround: toggleCell triggers draw.
-    }
+    simRef.current.drawCell(x, y, 1);
   };
 
   return (
@@ -170,7 +163,7 @@ export default function GameOfLifePage() {
                  <span className="w-1 h-4 bg-emerald-500"></span>
                  控制面板
                </h2>
-               <p className="text-[10px] text-zinc-500 font-mono mt-1 uppercase">/// Conway's Game of Life</p>
+               <p className="text-[10px] text-zinc-500 font-mono mt-1 uppercase">{'/// 康威生命游戏 (Game of Life)'}</p>
             </div>
 
             {/* Main Actions */}
