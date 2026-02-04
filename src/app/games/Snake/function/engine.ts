@@ -142,6 +142,19 @@ export function stepSnake(state: SnakeState, rng: RNG = Math.random): SnakeState
   // Redundant check removed since we checked above more accurately
   // for (let i = 1; i < nextSnake.length; i++) { ... }
 
+  if (willEat && nextSnake.length >= state.width * state.height) {
+    return {
+      ...state,
+      snake: nextSnake,
+      direction: dir,
+      pendingDirection: dir,
+      food: { x: -1, y: -1 },
+      score: state.score + 1,
+      tick: state.tick + 1,
+      status: 'passed',
+    };
+  }
+
   const nextFood = willEat ? createFood(state.width, state.height, nextSnake, rng) : state.food;
   const nextScore = willEat ? state.score + 1 : state.score;
 
@@ -157,7 +170,7 @@ export function stepSnake(state: SnakeState, rng: RNG = Math.random): SnakeState
 }
 
 export function togglePause(state: SnakeState): SnakeState {
-  if (state.status === 'game_over') return state;
+  if (state.status === 'game_over' || state.status === 'passed') return state;
   return { ...state, status: state.status === 'paused' ? 'running' : 'paused' };
 }
 
@@ -191,4 +204,3 @@ export function validNextDirections(state: SnakeState): Direction[] {
   }
   return out;
 }
-

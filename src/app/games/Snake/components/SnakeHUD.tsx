@@ -1,4 +1,5 @@
 import type { SnakeState } from '../types';
+import { computeFinalScore } from '../function/scoring';
 
 export type SnakeHUDProps = {
   state: SnakeState;
@@ -15,10 +16,15 @@ export default function SnakeHUD(props: SnakeHUDProps) {
   } else if (state.status === 'paused') {
     statusColor = 'text-amber-700 bg-amber-50 border-amber-100';
     statusText = '已暂停';
+  } else if (state.status === 'passed') {
+    statusColor = 'text-blue-700 bg-blue-50 border-blue-100';
+    statusText = '已通关';
   } else {
     statusColor = 'text-red-700 bg-red-50 border-red-100';
     statusText = '游戏结束';
   }
+
+  const finalScore = computeFinalScore({ length: state.snake.length, steps: state.tick });
 
   return (
     <div className="flex flex-col gap-3">
@@ -32,6 +38,12 @@ export default function SnakeHUD(props: SnakeHUDProps) {
           <div className="text-2xl font-bold text-zinc-900 font-mono leading-none tracking-tighter">{state.tick}</div>
         </div>
       </div>
+      {state.status !== 'running' && (
+        <div className="bg-zinc-50 border border-zinc-100 p-3 flex items-center justify-between rounded-lg">
+          <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">结算分数</div>
+          <div className="text-xl font-bold text-zinc-900 font-mono leading-none tracking-tighter">{finalScore}</div>
+        </div>
+      )}
       <div className={`p-3 flex items-center justify-between rounded-lg border ${statusColor} transition-colors duration-300`}>
         <div className="text-[10px] font-bold uppercase tracking-widest opacity-70">状态</div>
         <div className="text-xs font-bold font-mono tracking-widest flex items-center gap-2">
@@ -42,4 +54,3 @@ export default function SnakeHUD(props: SnakeHUDProps) {
     </div>
   );
 }
-

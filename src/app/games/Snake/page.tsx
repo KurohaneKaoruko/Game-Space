@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Navigation from '../../components/Navigation';
 import SnakeBoard from './components/SnakeBoard';
 import SnakeHUD from './components/SnakeHUD';
@@ -20,15 +20,17 @@ function dirFromKey(key: string): Direction | null {
 export default function SnakePage() {
   const { state, settings, setSettings, setDirection, step, restart, togglePause } = useSnake({ width: 20, height: 20, tickMs: 120 });
   const ai = useSnakeAIController({ state, onStep: step });
+  const startAI = ai.start;
   const [autoStartAI, setAutoStartAI] = useState(false);
+  const didInitRef = useRef(false);
 
   // Auto-start AI when game becomes running (after restart)
   useEffect(() => {
     if (autoStartAI && state.status === 'running') {
-        ai.start();
-        setAutoStartAI(false);
+      startAI();
+      setAutoStartAI(false);
     }
-  }, [state.status, autoStartAI, ai]);
+  }, [state.status, autoStartAI, startAI]);
 
   // Fix Hydration mismatch: Re-randomize food on mount
   // Also ensure game is in 'running' state initially or 'paused' to wait for user?
@@ -38,8 +40,10 @@ export default function SnakePage() {
   
   // Double check restart.
   useEffect(() => {
+    if (didInitRef.current) return;
+    didInitRef.current = true;
     restart();
-  }, []);
+  }, [restart]);
 
   useEffect(() => {
     if (ai.isRunning) return;
@@ -85,7 +89,7 @@ export default function SnakePage() {
   }
 
   function handleAIStart() {
-    if (state.status === 'game_over') {
+    if (state.status === 'game_over' || state.status === 'passed') {
         restart();
         setAutoStartAI(true);
     } else if (state.status === 'paused') {
@@ -245,6 +249,7 @@ export default function SnakePage() {
                 height={state.height}
                 snake={state.snake}
                 food={state.food}
+                tick={state.tick}
                 status={state.status}
                 onRestart={onRestart}
               />

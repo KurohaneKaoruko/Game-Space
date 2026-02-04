@@ -234,7 +234,7 @@ export default function AISettingsPanel({ board, gameOver, onMove, onMoveImmedia
       {/* 游戏结束提示 */}
       {gameOver && !isRunning && (
         <p className="text-center text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
-          /// SYSTEM_HALTED: GAME_OVER
+          {'/// SYSTEM_HALTED: GAME_OVER'}
         </p>
       )}
     </div>

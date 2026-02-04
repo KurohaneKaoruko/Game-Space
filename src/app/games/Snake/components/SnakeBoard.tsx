@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { Point, SnakeStatus } from '../types';
+import { computeFinalScore } from '../function/scoring';
 
 function keyOf(p: Point): string {
   return `${p.x},${p.y}`;
@@ -10,12 +11,13 @@ export type SnakeBoardProps = {
   height: number;
   snake: Point[];
   food: Point;
+  tick: number;
   status: SnakeStatus;
   onRestart?: () => void;
 };
 
 export default function SnakeBoard(props: SnakeBoardProps) {
-  const { width, height, snake, food, status, onRestart } = props;
+  const { width, height, snake, food, tick, status, onRestart } = props;
 
   const { snakeSet, headKey, foodKey } = useMemo(() => {
     const s = new Set<string>();
@@ -29,6 +31,8 @@ export default function SnakeBoard(props: SnakeBoardProps) {
 
   const cellCount = width * height;
   const cells = useMemo(() => Array.from({ length: cellCount }, (_, i) => i), [cellCount]);
+  const finalScore = computeFinalScore({ length: snake.length, steps: tick });
+  const didFinish = status === 'game_over' || status === 'passed';
 
   return (
     <div className="w-full flex justify-center py-4">
@@ -61,17 +65,31 @@ export default function SnakeBoard(props: SnakeBoardProps) {
           })}
         </div>
 
-        {status === 'game_over' ? (
+        {didFinish ? (
           <div className="absolute inset-0 bg-zinc-900/50 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-300 z-20">
             <div className="bg-white border border-zinc-200 p-8 text-center shadow-2xl rounded-xl max-w-[260px] transform scale-100 animate-in zoom-in-95 duration-300">
-              <div className="text-[10px] font-bold text-zinc-400 tracking-[0.2em] mb-3 uppercase">Game Over</div>
-              <div className="text-3xl font-black text-zinc-900 mb-8 tracking-tight">挑战失败</div>
+              <div className="text-[10px] font-bold text-zinc-400 tracking-[0.2em] mb-3 uppercase">{status === 'passed' ? 'Cleared' : 'Game Over'}</div>
+              <div className="text-3xl font-black text-zinc-900 mb-6 tracking-tight">{status === 'passed' ? '挑战成功' : '挑战失败'}</div>
+              <div className="grid grid-cols-3 gap-2 mb-6">
+                <div className="bg-zinc-50 border border-zinc-100 rounded-lg p-2">
+                  <div className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">长度</div>
+                  <div className="text-sm font-black text-zinc-900 font-mono">{snake.length}</div>
+                </div>
+                <div className="bg-zinc-50 border border-zinc-100 rounded-lg p-2">
+                  <div className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">步数</div>
+                  <div className="text-sm font-black text-zinc-900 font-mono">{tick}</div>
+                </div>
+                <div className="bg-zinc-50 border border-zinc-100 rounded-lg p-2">
+                  <div className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">分数</div>
+                  <div className="text-sm font-black text-zinc-900 font-mono">{finalScore}</div>
+                </div>
+              </div>
               {onRestart && (
                 <button 
                   onClick={onRestart}
                   className="w-full px-6 py-4 bg-zinc-900 text-white text-xs font-bold tracking-widest uppercase hover:bg-zinc-800 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-zinc-900/20 rounded-lg"
                 >
-                  再试一次
+                  {status === 'passed' ? '再来一局' : '再试一次'}
                 </button>
               )}
             </div>
@@ -81,4 +99,3 @@ export default function SnakeBoard(props: SnakeBoardProps) {
     </div>
   );
 }
-

@@ -1,5 +1,12 @@
-import { Direction, SnakeState } from '../types';
+import type { Direction, SnakeState } from '../types';
 import { movePoint, samePoint, isOpposite } from './engine';
+
+export const DirectionValues = {
+  Up: 'Up',
+  Down: 'Down',
+  Left: 'Left',
+  Right: 'Right',
+} as const;
 
 export type CustomScriptContext = {
   state: SnakeState;
@@ -7,7 +14,7 @@ export type CustomScriptContext = {
     movePoint: typeof movePoint;
     samePoint: typeof samePoint;
     isOpposite: typeof isOpposite;
-    Direction: typeof Direction;
+    Direction: typeof DirectionValues;
   };
 };
 
@@ -64,10 +71,10 @@ return think(state, utils);
       // but we still wrap it to prevent crashing the app.
       
       const func = new Function('state', 'utils', script);
-      const result = func(context.state, context.utils);
-      
-      if (['Up', 'Down', 'Left', 'Right'].includes(result)) {
-        return result as Direction;
+      const result: unknown = func(context.state, context.utils);
+
+      if (result === 'Up' || result === 'Down' || result === 'Left' || result === 'Right') {
+        return result;
       }
       return null;
     } catch (e) {
@@ -82,7 +89,8 @@ export function validateScript(script: string): { valid: boolean; error?: string
   try {
     new Function('state', 'utils', script);
     return { valid: true };
-  } catch (e: any) {
-    return { valid: false, error: e.message };
+  } catch (e: unknown) {
+    const error = e instanceof Error ? e.message : String(e);
+    return { valid: false, error };
   }
 }

@@ -5,7 +5,7 @@ export type Point = {
   y: number;
 };
 
-export type SnakeStatus = 'running' | 'paused' | 'game_over';
+export type SnakeStatus = 'running' | 'paused' | 'game_over' | 'passed';
 
 export type SnakeState = {
   width: number;
@@ -24,4 +24,3 @@ export type SnakeSettings = {
   height: number;
   tickMs: number;
 };
-

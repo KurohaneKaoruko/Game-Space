@@ -33,10 +33,11 @@ export default function SnakeAIControls(props: SnakeAIControlsProps) {
 
   // Initialize script from AI controller or default
   useEffect(() => {
+    if (showEditor) return;
     if (ai.customScript) {
       setTempScript(ai.customScript);
     }
-  }, []);
+  }, [ai.customScript, showEditor]);
 
   const handleSaveScript = () => {
     ai.setCustomScript(tempScript);
@@ -45,7 +46,7 @@ export default function SnakeAIControls(props: SnakeAIControlsProps) {
   };
 
   const editorModal = (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-zinc-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
         <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden border border-zinc-200 flex flex-col h-[80vh] animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 bg-zinc-50">
                 <div className="flex items-center gap-3">
@@ -187,6 +188,8 @@ export default function SnakeAIControls(props: SnakeAIControlsProps) {
             ? '停止 AI 运行' 
             : status === 'game_over' 
                 ? '复活并启动 AI' 
+                : status === 'passed'
+                    ? '再来一局并启动 AI'
                 : status === 'paused'
                     ? '继续并启动 AI'
                     : '启动 AI 托管'
@@ -195,4 +198,3 @@ export default function SnakeAIControls(props: SnakeAIControlsProps) {
     </div>
   );
 }
-

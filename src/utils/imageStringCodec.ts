@@ -241,7 +241,8 @@ function rleDecode(input: string): string {
 }
 
 async function compressWithFormat(format: string, data: Uint8Array): Promise<Uint8Array> {
-  const stream = new CompressionStream(format as any);
+  type CompressionStreamFormat = ConstructorParameters<typeof CompressionStream>[0];
+  const stream = new CompressionStream(format as unknown as CompressionStreamFormat);
   const writer = stream.writable.getWriter();
   writer.write(new Uint8Array(data));
   writer.close();
@@ -249,7 +250,8 @@ async function compressWithFormat(format: string, data: Uint8Array): Promise<Uin
 }
 
 async function decompressWithFormat(format: string, data: Uint8Array): Promise<Uint8Array> {
-  const stream = new DecompressionStream(format as any);
+  type DecompressionStreamFormat = ConstructorParameters<typeof DecompressionStream>[0];
+  const stream = new DecompressionStream(format as unknown as DecompressionStreamFormat);
   const writer = stream.writable.getWriter();
   writer.write(new Uint8Array(data));
   writer.close();

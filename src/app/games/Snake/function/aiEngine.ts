@@ -1,7 +1,7 @@
 import type { Direction, Point, SnakeState } from '../types';
 import { inBounds, isOpposite, movePoint, samePoint, validNextDirections } from './engine';
 import { HamiltonianCycle } from './hamiltonian';
-import { CustomScriptExecutor } from './customScript';
+import { CustomScriptExecutor, DirectionValues } from './customScript';
 
 export type AIStrategy = 'greedy' | 'safe' | 'strong' | 'hamiltonian' | 'custom';
 
@@ -444,7 +444,7 @@ function getCustomMove(state: SnakeState, legal: Direction[], script?: string): 
       movePoint,
       samePoint,
       isOpposite,
-      Direction: {} as any // Direction type is just string union, no runtime object needed really, but kept for interface compat if expanded
+      Direction: DirectionValues,
     }
   });
 
