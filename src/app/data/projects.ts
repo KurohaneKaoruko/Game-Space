@@ -44,6 +44,14 @@ export const simulations: Project[] = [
     link: '/simulations/GameOfLife'
   },
   {
+    id: 'LangtonsAnt',
+    title: '兰顿蚂蚁 (Langton\'s Ant)',
+    description: '经典零玩家游戏：简单的转向规则在混沌后会涌现出稳定的“高速公路”结构。支持多蚂蚁、速度/格子大小调节与手动改图。',
+    image: '/images/langtons-ant.svg',
+    technologies: ['React', 'TypeScript', 'Canvas'],
+    link: '/simulations/LangtonsAnt'
+  },
+  {
     id: 'ParticleLife',
     title: '粒子生命 (Particle Life)',
     description: '基于 WebGPU 加速的粒子人工生命模拟。数千个粒子根据简单的交互矩阵涌现出复杂的类生命行为。',

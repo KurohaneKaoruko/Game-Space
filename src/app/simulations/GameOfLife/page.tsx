@@ -133,13 +133,16 @@ export default function GameOfLifePage() {
     simRef.current.drawCell(x, y, 1);
   };
 
+  const canvasBgClass = colorTheme === 'dark' ? 'bg-zinc-900' : 'bg-white';
+  const overlayClass = colorTheme === 'dark' ? 'text-white/50' : 'text-zinc-900/60';
+
   return (
     <div className="h-screen overflow-hidden bg-zinc-50 flex flex-col">
       <Navigation title="GAME_OF_LIFE" />
       
       <div className="flex-1 flex flex-col lg:flex-row pt-16 h-full overflow-hidden">
         {/* Canvas */}
-        <div ref={wrapRef} className="h-64 shrink-0 lg:h-full lg:flex-1 relative bg-zinc-900 overflow-hidden cursor-crosshair">
+        <div ref={wrapRef} className={`h-64 shrink-0 lg:h-full lg:flex-1 relative ${canvasBgClass} overflow-hidden cursor-crosshair`}>
           <canvas 
             ref={canvasRef}
             className="block"
@@ -148,7 +151,7 @@ export default function GameOfLifePage() {
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerUp}
           />
-          <div className="absolute top-4 left-4 text-white/50 text-xs font-mono pointer-events-none">
+          <div className={`absolute top-4 left-4 ${overlayClass} text-xs font-mono pointer-events-none`}>
             Generations: Loop
           </div>
         </div>
