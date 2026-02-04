@@ -5,6 +5,7 @@ import ControlsPanel from './ui/ControlsPanel';
 import SimulationCanvas from './ui/SimulationCanvas';
 import { useEffect, useState } from 'react';
 import { usePendulumSimController } from './function/usePendulumSimController';
+import VisualizationPanel from './ui/VisualizationPanel';
 
 export default function PendulumSimPage() {
   const [isMobile, setIsMobile] = useState(true);
@@ -40,12 +41,19 @@ export default function PendulumSimPage() {
                 showTrail={ui.showTrail}
                 trailLength={ui.trailLength}
                 showEnergy={ui.showEnergy}
+                showPhasePlot={ui.showPhasePlot}
+                phaseTrailLength={ui.phaseTrailLength}
                 resetToken={ui.resetToken}
               />
             </div>
 
-            <div className={`lg:w-80 xl:w-96 bg-white tech-border border border-zinc-200 overflow-hidden`}>
-              <ControlsPanel ui={ui} actions={actions} />
+            <div className="lg:w-80 xl:w-96 flex flex-col gap-6">
+              <div className="bg-white tech-border border border-zinc-200 overflow-hidden">
+                <ControlsPanel ui={ui} actions={actions} />
+              </div>
+              <div className="bg-white tech-border border border-zinc-200 overflow-hidden">
+                <VisualizationPanel ui={ui} actions={actions} />
+              </div>
             </div>
           </div>
         </div>

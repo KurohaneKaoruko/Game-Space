@@ -3,6 +3,8 @@
 import type { PendulumUIActions, PendulumUIState } from '../function/usePendulumSimController';
 import { useState } from 'react';
 
+type SectionKey = 'mode' | 'physics' | 'length' | 'mass' | 'angle';
+
 function Field({
   label,
   value,
@@ -48,6 +50,17 @@ function Field({
 export default function ControlsPanel({ ui, actions }: { ui: PendulumUIState; actions: PendulumUIActions }) {
   const count = ui.params.mode === 'double' ? 2 : 3;
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>({
+    mode: true,
+    physics: true,
+    length: true,
+    mass: true,
+    angle: true,
+  });
+
+  const toggleSection = (key: SectionKey) => {
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -96,76 +109,164 @@ export default function ControlsPanel({ ui, actions }: { ui: PendulumUIState; ac
       </div>
 
       <div className="space-y-3">
-        <div className="text-xs font-bold text-zinc-900 uppercase tracking-wider">模式选择 (MODE)</div>
-        <div className="grid grid-cols-2 gap-2 bg-zinc-100 p-1 rounded-md">
-          <button
-            onClick={() => actions.setMode('double')}
-            className={`px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all rounded-sm ${
-              ui.params.mode === 'double'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-zinc-500 hover:text-zinc-900'
-            }`}
+        <button
+          type="button"
+          onClick={() => toggleSection('mode')}
+          className="w-full flex items-center justify-between text-xs font-bold text-zinc-900 uppercase tracking-wider"
+        >
+          <span>模式选择 (MODE)</span>
+          <svg
+            className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${openSections.mode ? '' : 'rotate-180'}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            双摆 (DOUBLE)
-          </button>
-          <button
-            onClick={() => actions.setMode('triple')}
-            className={`px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all rounded-sm ${
-              ui.params.mode === 'triple'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-zinc-500 hover:text-zinc-900'
-            }`}
+            <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
+        {openSections.mode && (
+          <div className="grid grid-cols-2 gap-2 bg-zinc-100 p-1 rounded-md">
+            <button
+              onClick={() => actions.setMode('double')}
+              className={`px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all rounded-sm ${
+                ui.params.mode === 'double'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-zinc-500 hover:text-zinc-900'
+              }`}
+            >
+              双摆 (DOUBLE)
+            </button>
+            <button
+              onClick={() => actions.setMode('triple')}
+              className={`px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all rounded-sm ${
+                ui.params.mode === 'triple'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-zinc-500 hover:text-zinc-900'
+              }`}
+            >
+              三摆 (TRIPLE)
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-4">
+        <button
+          type="button"
+          onClick={() => toggleSection('physics')}
+          className="w-full flex items-center justify-between text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2"
+        >
+          <span>物理参数 (PHYSICS)</span>
+          <svg
+            className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${openSections.physics ? '' : 'rotate-180'}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            三摆 (TRIPLE)
-          </button>
-        </div>
+            <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
+        {openSections.physics && (
+          <>
+            <Field
+              label="重力 (GRAVITY)"
+              value={ui.params.gravity}
+              min={0}
+              max={25}
+              step={0.1}
+              onChange={(n) => actions.setParam({ gravity: n })}
+            />
+            <Field
+              label="阻尼 (DAMPING)"
+              value={ui.params.damping}
+              min={0}
+              max={0.03}
+              step={0.0005}
+              onChange={(n) => actions.setParam({ damping: n })}
+            />
+          </>
+        )}
       </div>
 
       <div className="space-y-4">
-        <div className="text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">物理参数 (PHYSICS)</div>
-        <Field label="重力 (GRAVITY)" value={ui.params.gravity} min={0} max={25} step={0.1} onChange={(n) => actions.setParam({ gravity: n })} />
-        <Field label="阻尼 (DAMPING)" value={ui.params.damping} min={0} max={0.03} step={0.0005} onChange={(n) => actions.setParam({ damping: n })} />
+        <button
+          type="button"
+          onClick={() => toggleSection('length')}
+          className="w-full flex items-center justify-between text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2"
+        >
+          <span>摆臂长度 (LENGTH)</span>
+          <svg
+            className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${openSections.length ? '' : 'rotate-180'}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
+        {openSections.length && (
+          <>
+            <Field label="L1 (上段)" value={ui.params.lengths[0]} min={0.2} max={3} step={0.01} onChange={(n) => actions.setLength(0, n)} />
+            <Field label="L2 (中段)" value={ui.params.lengths[1]} min={0.2} max={3} step={0.01} onChange={(n) => actions.setLength(1, n)} />
+            {count === 3 && (
+              <Field label="L3 (下段)" value={ui.params.lengths[2]} min={0.2} max={3} step={0.01} onChange={(n) => actions.setLength(2, n)} />
+            )}
+          </>
+        )}
       </div>
 
       <div className="space-y-4">
-        <div className="text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">摆臂长度 (LENGTH)</div>
-        <Field label="L1 (上段)" value={ui.params.lengths[0]} min={0.2} max={3} step={0.01} onChange={(n) => actions.setLength(0, n)} />
-        <Field label="L2 (中段)" value={ui.params.lengths[1]} min={0.2} max={3} step={0.01} onChange={(n) => actions.setLength(1, n)} />
-        {count === 3 && <Field label="L3 (下段)" value={ui.params.lengths[2]} min={0.2} max={3} step={0.01} onChange={(n) => actions.setLength(2, n)} />}
+        <button
+          type="button"
+          onClick={() => toggleSection('mass')}
+          className="w-full flex items-center justify-between text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2"
+        >
+          <span>质量 (MASS)</span>
+          <svg
+            className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${openSections.mass ? '' : 'rotate-180'}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
+        {openSections.mass && (
+          <>
+            <Field label="M1" value={ui.params.masses[0]} min={0.2} max={5} step={0.05} onChange={(n) => actions.setMass(0, n)} />
+            <Field label="M2" value={ui.params.masses[1]} min={0.2} max={5} step={0.05} onChange={(n) => actions.setMass(1, n)} />
+            {count === 3 && <Field label="M3" value={ui.params.masses[2]} min={0.2} max={5} step={0.05} onChange={(n) => actions.setMass(2, n)} />}
+          </>
+        )}
       </div>
 
       <div className="space-y-4">
-        <div className="text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">质量 (MASS)</div>
-        <Field label="M1" value={ui.params.masses[0]} min={0.2} max={5} step={0.05} onChange={(n) => actions.setMass(0, n)} />
-        <Field label="M2" value={ui.params.masses[1]} min={0.2} max={5} step={0.05} onChange={(n) => actions.setMass(1, n)} />
-        {count === 3 && <Field label="M3" value={ui.params.masses[2]} min={0.2} max={5} step={0.05} onChange={(n) => actions.setMass(2, n)} />}
+        <button
+          type="button"
+          onClick={() => toggleSection('angle')}
+          className="w-full flex items-center justify-between text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2"
+        >
+          <span>初始角度 (ANGLE)</span>
+          <svg
+            className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${openSections.angle ? '' : 'rotate-180'}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
+        {openSections.angle && (
+          <>
+            <Field label="θ1" value={ui.params.anglesDeg[0]} min={-180} max={180} step={1} onChange={(n) => actions.setAngleDeg(0, n)} />
+            <Field label="θ2" value={ui.params.anglesDeg[1]} min={-180} max={180} step={1} onChange={(n) => actions.setAngleDeg(1, n)} />
+            {count === 3 && (
+              <Field label="θ3" value={ui.params.anglesDeg[2]} min={-180} max={180} step={1} onChange={(n) => actions.setAngleDeg(2, n)} />
+            )}
+          </>
+        )}
       </div>
 
-      <div className="space-y-4">
-        <div className="text-xs font-bold text-zinc-900 uppercase tracking-wider border-b border-zinc-100 pb-2">初始角度 (ANGLE)</div>
-        <Field label="θ1" value={ui.params.anglesDeg[0]} min={-180} max={180} step={1} onChange={(n) => actions.setAngleDeg(0, n)} />
-        <Field label="θ2" value={ui.params.anglesDeg[1]} min={-180} max={180} step={1} onChange={(n) => actions.setAngleDeg(1, n)} />
-        {count === 3 && <Field label="θ3" value={ui.params.anglesDeg[2]} min={-180} max={180} step={1} onChange={(n) => actions.setAngleDeg(2, n)} />}
-      </div>
-
-      <div className="space-y-3 pt-4 border-t border-zinc-200">
-        <div className="text-xs font-bold text-zinc-900 uppercase tracking-wider">可视化 (VISUAL)</div>
-        <label className="flex items-center justify-between gap-3 text-xs font-mono text-zinc-600 cursor-pointer hover:text-blue-600 transition-colors">
-          <span>显示轨迹 (TRAIL)</span>
-          <div className={`w-8 h-4 rounded-full p-0.5 transition-colors ${ui.showTrail ? 'bg-blue-600' : 'bg-zinc-200'}`}>
-             <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${ui.showTrail ? 'translate-x-4' : 'translate-x-0'}`} />
-          </div>
-          <input type="checkbox" className="hidden" checked={ui.showTrail} onChange={(e) => actions.setShowTrail(e.target.checked)} />
-        </label>
-        <label className="flex items-center justify-between gap-3 text-xs font-mono text-zinc-600 cursor-pointer hover:text-blue-600 transition-colors">
-          <span>能量图表 (ENERGY)</span>
-          <div className={`w-8 h-4 rounded-full p-0.5 transition-colors ${ui.showEnergy ? 'bg-blue-600' : 'bg-zinc-200'}`}>
-             <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${ui.showEnergy ? 'translate-x-4' : 'translate-x-0'}`} />
-          </div>
-          <input type="checkbox" className="hidden" checked={ui.showEnergy} onChange={(e) => actions.setShowEnergy(e.target.checked)} />
-        </label>
-        <Field label="轨迹长度 (LENGTH)" value={ui.trailLength} min={20} max={2000} step={10} onChange={(n) => actions.setTrailLength(Math.round(n))} />
-      </div>
         </>
       )}
     </div>

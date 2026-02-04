@@ -71,6 +71,7 @@ export class PendulumSimulation {
       t: this.t,
       anchor: v(0, 0),
       points,
+      anglesRad: this.q.slice(),
       params: this.params,
       energy,
     };

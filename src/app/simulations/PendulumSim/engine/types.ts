@@ -25,7 +25,7 @@ export type PendulumSnapshot = {
   t: number;
   anchor: Vec2;
   points: Vec2[];
+  anglesRad: number[];
   params: PendulumParams;
   energy: EnergySample;
 };
-

@@ -10,6 +10,8 @@ export type PendulumUIState = {
   showTrail: boolean;
   trailLength: number;
   showEnergy: boolean;
+  showPhasePlot: boolean;
+  phaseTrailLength: number;
   resetToken: number;
 };
 
@@ -25,6 +27,8 @@ export type PendulumUIActions = {
   setShowTrail: (v: boolean) => void;
   setTrailLength: (n: number) => void;
   setShowEnergy: (v: boolean) => void;
+  setShowPhasePlot: (v: boolean) => void;
+  setPhaseTrailLength: (n: number) => void;
 };
 
 export function usePendulumSimController(initial?: Partial<PendulumParams>): [PendulumUIState, PendulumUIActions] {
@@ -33,6 +37,8 @@ export function usePendulumSimController(initial?: Partial<PendulumParams>): [Pe
   const [showTrail, setShowTrail] = useState(true);
   const [trailLength, setTrailLength] = useState(450);
   const [showEnergy, setShowEnergy] = useState(true);
+  const [showPhasePlot, setShowPhasePlot] = useState(true);
+  const [phaseTrailLength, setPhaseTrailLength] = useState(2000);
   const [resetToken, setResetToken] = useState(0);
 
   const simRef = useRef<PendulumSimulation | null>(null);
@@ -106,12 +112,13 @@ export function usePendulumSimController(initial?: Partial<PendulumParams>): [Pe
       setShowTrail,
       setTrailLength,
       setShowEnergy,
+      setShowPhasePlot,
+      setPhaseTrailLength,
     };
   }, [params]);
 
   return [
-    { params, paused, showTrail, trailLength, showEnergy, resetToken },
+    { params, paused, showTrail, trailLength, showEnergy, showPhasePlot, phaseTrailLength, resetToken },
     actions,
   ];
 }
-

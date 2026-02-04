@@ -12,6 +12,8 @@ type Props = {
   showTrail: boolean;
   trailLength: number;
   showEnergy: boolean;
+  showPhasePlot: boolean;
+  phaseTrailLength: number;
   resetToken: number;
 };
 
@@ -20,19 +22,30 @@ function formatPercent(n: number) {
   return `${(n * 100).toFixed(2)}%`;
 }
 
-export default function SimulationCanvas({ simRef, params, paused, showTrail, trailLength, showEnergy, resetToken }: Props) {
+export default function SimulationCanvas({
+  simRef,
+  params,
+  paused,
+  showTrail,
+  trailLength,
+  showEnergy,
+  showPhasePlot,
+  phaseTrailLength,
+  resetToken,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const accRef = useRef(0);
 
-  const settingsRef = useRef({ paused, showTrail, trailLength, showEnergy, resetToken, params });
+  const settingsRef = useRef({ paused, showTrail, trailLength, showEnergy, showPhasePlot: false, phaseTrailLength: 2000, resetToken, params });
   useEffect(() => {
-    settingsRef.current = { paused, showTrail, trailLength, showEnergy, resetToken, params };
-  }, [paused, showTrail, trailLength, showEnergy, resetToken, params]);
+    settingsRef.current = { paused, showTrail, trailLength, showEnergy, showPhasePlot, phaseTrailLength, resetToken, params };
+  }, [paused, showTrail, trailLength, showEnergy, showPhasePlot, phaseTrailLength, resetToken, params]);
 
   const lastResetTokenRef = useRef(resetToken);
   const baseEnergyRef = useRef<number | null>(null);
   const energyBufRef = useRef<{ total: number; kinetic: number; potential: number }[]>([]);
   const trailRef = useRef<Vec2[]>([]);
+  const phaseRef = useRef<{ a: number; b: number }[]>([]);
 
   const totalLength = useMemo(() => {
     const count = params.mode === 'double' ? 2 : 3;
@@ -80,6 +93,8 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
 
     const worldToScreen = (p: Vec2, origin: Vec2, scale: number) => ({ x: origin.x + p.x * scale, y: origin.y + p.y * scale });
 
+    const wrapAngle = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
+
     const loop = () => {
       const now = performance.now();
       const dt = Math.min(0.05, (now - lastMs) / 1000);
@@ -89,7 +104,16 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
       const w = rect.width;
       const h = rect.height;
 
-      const { paused: pausedNow, showTrail: trailOn, trailLength: trailN, showEnergy: energyOn, resetToken: resetNow, params: paramsNow } =
+      const {
+        paused: pausedNow,
+        showTrail: trailOn,
+        trailLength: trailN,
+        showEnergy: energyOn,
+        showPhasePlot: phaseOn,
+        phaseTrailLength: phaseN,
+        resetToken: resetNow,
+        params: paramsNow,
+      } =
         settingsRef.current;
 
       if (resetNow !== lastResetTokenRef.current) {
@@ -97,6 +121,7 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
         baseEnergyRef.current = null;
         energyBufRef.current = [];
         trailRef.current = [];
+        phaseRef.current = [];
         accRef.current = 0;
       }
 
@@ -130,6 +155,18 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
       } else {
         energyBufRef.current = [];
         baseEnergyRef.current = null;
+      }
+
+      if (phaseOn) {
+        const count = paramsNow.mode === 'double' ? 2 : 3;
+        const idxA = count === 2 ? 0 : 1;
+        const idxB = count === 2 ? 1 : 2;
+        const a = wrapAngle(snap.anglesRad[idxA] ?? 0);
+        const b = wrapAngle(snap.anglesRad[idxB] ?? 0);
+        phaseRef.current.push({ a, b });
+        if (phaseRef.current.length > phaseN) phaseRef.current.splice(0, phaseRef.current.length - phaseN);
+      } else {
+        phaseRef.current = [];
       }
 
       ctx.clearRect(0, 0, w, h);
@@ -258,6 +295,64 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
         ctx.fillStyle = '#71717A'; // zinc-500
         ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
         ctx.fillText(`ENERGY_DRIFT: ${formatPercent(drift)}`, x0 + 10, y0 + boxH - 8);
+      }
+
+      if (phaseOn && phaseRef.current.length >= 2) {
+        const box = Math.min(220, w - 24);
+        const boxW = box;
+        const boxH = 220;
+        const x0 = 12;
+        const y0 = Math.max(12, h - boxH - 12);
+
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.strokeStyle = '#E4E4E7';
+        ctx.lineWidth = 1;
+        ctx.fillRect(x0, y0, boxW, boxH);
+        ctx.strokeRect(x0, y0, boxW, boxH);
+
+        const midX = x0 + boxW / 2;
+        const midY = y0 + boxH / 2;
+        ctx.strokeStyle = '#F4F4F5';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(midX, y0);
+        ctx.lineTo(midX, y0 + boxH);
+        ctx.moveTo(x0, midY);
+        ctx.lineTo(x0 + boxW, midY);
+        ctx.stroke();
+
+        const toX = (a: number) => x0 + ((a + Math.PI) / (2 * Math.PI)) * boxW;
+        const toY = (b: number) => y0 + (1 - (b + Math.PI) / (2 * Math.PI)) * boxH;
+
+        const buf = phaseRef.current;
+        ctx.strokeStyle = 'rgba(37, 99, 235, 0.35)';
+        ctx.lineWidth = 1.25;
+        ctx.beginPath();
+        ctx.moveTo(toX(buf[0].a), toY(buf[0].b));
+        for (let i = 1; i < buf.length; i++) {
+          const prev = buf[i - 1];
+          const cur = buf[i];
+          const da = Math.abs(cur.a - prev.a);
+          const db = Math.abs(cur.b - prev.b);
+          if (da > Math.PI || db > Math.PI) {
+            ctx.moveTo(toX(cur.a), toY(cur.b));
+            continue;
+          }
+          ctx.lineTo(toX(cur.a), toY(cur.b));
+        }
+        ctx.stroke();
+
+        const last = buf[buf.length - 1];
+        ctx.fillStyle = '#2563EB';
+        ctx.beginPath();
+        ctx.arc(toX(last.a), toY(last.b), 2.4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#71717A';
+        ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+        const label =
+          paramsNow.mode === 'double' ? 'θ1,θ2' : 'θ2,θ3';
+        ctx.fillText(label, x0 + 10, y0 + 16);
       }
 
       raf = requestAnimationFrame(loop);
