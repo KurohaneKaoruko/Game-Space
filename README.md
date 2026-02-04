@@ -32,7 +32,7 @@ Project-Space 是一个展示各种小游戏项目的空间。
 | 均衡 | Minimax | 平衡速度与效果 |
 | 最优 | Expectimax | 深度搜索，效果最佳 |
 
-### 函数 · 指数挂机 (Function Idle)
+### 函数挂机游戏 (Function Idle)
 
 一个探索数学函数增长之美的挂机游戏。
 

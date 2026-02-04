@@ -54,7 +54,7 @@ export default function Navigation({ title }: { title?: string }) {
               HOME
             </NavLink>
             <NavLink href="/games" active={isGames}>
-              PROJECTS
+              GAMES
             </NavLink>
             <NavLink href="/tools" active={isTools}>
               TOOLS
@@ -90,7 +90,7 @@ export default function Navigation({ title }: { title?: string }) {
               HOME
             </MobileNavLink>
             <MobileNavLink href="/games" active={isGames}>
-              PROJECTS
+              GAMES
             </MobileNavLink>
             <MobileNavLink href="/tools" active={isTools}>
               TOOLS

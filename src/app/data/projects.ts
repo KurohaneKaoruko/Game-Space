@@ -18,11 +18,19 @@ export const games: Project[] = [
   },
   {
     id: 'FunctionIdle',
-    title: '函数 · 指数挂机',
+    title: ' 函数挂机游戏',
     description: '指数增长主题的挂机小游戏：升级参数提升增长速度，支持本地存档与离线结算，并提供增长曲线可视化。',
     image: '/images/function-idle.svg',
     technologies: ['React', 'TypeScript', 'Next.js', 'Tailwind CSS'],
     link: '/games/FunctionIdle'
+  },
+  {
+    id: 'Snake',
+    title: '贪吃蛇',
+    description: '经典贪吃蛇小游戏：支持键盘操作与暂停重开，并提供可一键接管的 AI 玩家（自动寻路与避险策略）。',
+    image: '/images/snake.svg',
+    technologies: ['React', 'TypeScript', 'Next.js', 'Tailwind CSS'],
+    link: '/games/Snake'
   },
   {
     id: 'PendulumSim',
