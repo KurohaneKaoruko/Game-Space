@@ -158,13 +158,31 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
 
       ctx.clearRect(0, 0, w, h);
 
-      ctx.fillStyle = '#F8FAFC';
+      ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, w, h);
+      
+      // Grid Background
+      ctx.save();
+      ctx.strokeStyle = '#F4F4F5'; // zinc-100
+      ctx.lineWidth = 1;
+      const gridSize = 40;
+      
+      ctx.beginPath();
+      for (let x = 0; x <= w; x += gridSize) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+      }
+      for (let y = 0; y <= h; y += gridSize) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+      }
+      ctx.stroke();
+      ctx.restore();
 
       const trail = trailRef.current;
       if (trailOn && trail.length >= 2) {
         ctx.lineWidth = 1.5;
-        ctx.strokeStyle = 'rgba(14, 165, 233, 0.55)';
+        ctx.strokeStyle = 'rgba(37, 99, 235, 0.4)'; // blue-600 with opacity
         ctx.beginPath();
         const s0 = worldToScreen(trail[0], origin, scale);
         ctx.moveTo(s0.x, s0.y);
@@ -177,8 +195,9 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
 
       const pointsS = snap.points.map((p) => worldToScreen(p, origin, scale));
 
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#0F172A';
+      // Draw Arms
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#18181B'; // zinc-900
       ctx.beginPath();
       ctx.moveTo(origin.x, origin.y);
       for (const p of pointsS) ctx.lineTo(p.x, p.y);
@@ -188,23 +207,36 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
       const masses = paramsNow.masses;
       for (let i = 0; i < count; i++) {
         const r = 8 + 4 * Math.sqrt(Math.max(0.2, masses[i]));
-        ctx.fillStyle = i === count - 1 ? '#F59E0B' : '#38BDF8';
+        // Pendulum bob styling
+        ctx.fillStyle = i === count - 1 ? '#2563EB' : '#FFFFFF'; // Last one blue, others white
+        ctx.strokeStyle = '#18181B'; // zinc-900
+        ctx.lineWidth = 2;
+        
         ctx.beginPath();
         ctx.arc(pointsS[i].x, pointsS[i].y, r, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = '#0F172A';
-        ctx.lineWidth = 2;
         ctx.stroke();
+        
+        // Inner dot for white bobs
+        if (i !== count - 1) {
+          ctx.fillStyle = '#18181B';
+          ctx.beginPath();
+          ctx.arc(pointsS[i].x, pointsS[i].y, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
-      ctx.fillStyle = '#0F172A';
+      // Origin point
+      ctx.fillStyle = '#18181B';
       ctx.beginPath();
-      ctx.arc(origin.x, origin.y, 5, 0, Math.PI * 2);
+      ctx.arc(origin.x, origin.y, 4, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = '#0F172A';
-      ctx.font = '12px ui-sans-serif, system-ui, -apple-system';
-      ctx.fillText(pausedNow ? '暂停' : '运行中', 12, h - 12);
+      // Status text
+      ctx.fillStyle = '#71717A'; // zinc-500
+      ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+      const statusText = pausedNow ? 'STATUS: PAUSED' : 'STATUS: RUNNING';
+      ctx.fillText(statusText, 12, h - 12);
 
       if (energyOn && energyBufRef.current.length >= 2) {
         const buf = energyBufRef.current;
@@ -213,14 +245,14 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
         const x0 = 12;
         const y0 = 12;
 
-        ctx.fillStyle = 'rgba(255,255,255,0.85)';
-        ctx.strokeStyle = 'rgba(15,23,42,0.15)';
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.strokeStyle = '#E4E4E7'; // zinc-200
         ctx.lineWidth = 1;
         ctx.fillRect(x0, y0, boxW, boxH);
         ctx.strokeRect(x0, y0, boxW, boxH);
 
         const yMid = y0 + boxH / 2;
-        ctx.strokeStyle = 'rgba(15,23,42,0.12)';
+        ctx.strokeStyle = '#F4F4F5'; // zinc-100
         ctx.beginPath();
         ctx.moveTo(x0, yMid);
         ctx.lineTo(x0 + boxW, yMid);
@@ -228,7 +260,7 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
 
         const drawLine = (key: 'total' | 'kinetic' | 'potential', color: string) => {
           ctx.strokeStyle = color;
-          ctx.lineWidth = 1.6;
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
           for (let i = 0; i < buf.length; i++) {
             const t = i / (buf.length - 1);
@@ -241,15 +273,15 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
           ctx.stroke();
         };
 
-        drawLine('potential', 'rgba(59,130,246,0.75)');
-        drawLine('kinetic', 'rgba(16,185,129,0.75)');
-        drawLine('total', 'rgba(15,23,42,0.85)');
+        drawLine('potential', '#93C5FD'); // blue-300
+        drawLine('kinetic', '#86EFAC'); // green-300
+        drawLine('total', '#18181B'); // zinc-900
 
         const last = buf[buf.length - 1];
         const drift = last.total - 1;
-        ctx.fillStyle = '#0F172A';
-        ctx.font = '12px ui-sans-serif, system-ui, -apple-system';
-        ctx.fillText(`能量漂移: ${formatPercent(drift)}`, x0 + 10, y0 + boxH - 8);
+        ctx.fillStyle = '#71717A'; // zinc-500
+        ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+        ctx.fillText(`ENERGY_DRIFT: ${formatPercent(drift)}`, x0 + 10, y0 + boxH - 8);
       }
 
       raf = requestAnimationFrame(loop);
@@ -330,7 +362,7 @@ export default function SimulationCanvas({ simRef, params, paused, showTrail, tr
 
   return (
     <div className="w-full">
-      <div className="w-full aspect-[16/10] rounded-lg overflow-hidden bg-gray-50 border border-gray-200">
+      <div className="w-full aspect-16/10 rounded-lg overflow-hidden bg-gray-50 border border-gray-200">
         <canvas
           ref={canvasRef}
           className="w-full h-full touch-none"

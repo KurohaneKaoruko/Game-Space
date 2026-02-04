@@ -28,60 +28,63 @@ export function SettingsModal(props: {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/40 px-4 py-6 overflow-y-auto flex items-start justify-center"
+      className="fixed inset-0 z-50 bg-zinc-900/20 backdrop-blur-sm px-4 py-6 overflow-y-auto flex items-start justify-center"
       onMouseDown={props.onClose}
     >
       <div
-        className="w-full max-w-lg bg-white rounded-xl shadow-lg border border-gray-200 p-5 max-h-[calc(100vh-3rem)] overflow-y-auto"
+        className="w-full max-w-lg bg-white tech-border border border-zinc-200 p-6 max-h-[calc(100vh-3rem)] overflow-y-auto"
         onMouseDown={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between">
-          <div className="text-lg font-bold text-gray-900">设置</div>
+        <div className="flex items-center justify-between mb-6">
+          <div className="text-lg font-bold text-zinc-900 flex items-center gap-2">
+            <span className="w-1 h-4 bg-blue-600"></span>
+            系统设置 (SYSTEM_SETTINGS)
+          </div>
           <button
             type="button"
             onClick={props.onClose}
-            className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-300 hover:shadow transition-all"
+            className="inline-flex items-center justify-center w-8 h-8 border border-zinc-200 text-zinc-400 hover:text-zinc-900 hover:border-zinc-400 transition-all"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <div className="mt-4 rounded-xl bg-gray-50 border border-gray-200 p-4">
-          <div className="font-semibold text-gray-900">自动购买</div>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <Toggle label="b" on={props.autoBuy.base} onToggle={() => props.onToggleAutoBuy('base')} />
-            <Toggle label="r" on={props.autoBuy.r} onToggle={() => props.onToggleAutoBuy('r')} />
-            <Toggle label="m" on={props.autoBuy.multiplier} onToggle={() => props.onToggleAutoBuy('multiplier')} />
-            <Toggle label="曲率 b" on={props.autoBuy.bCurve} onToggle={() => props.onToggleAutoBuy('bCurve')} />
-            <Toggle label="曲率 r" on={props.autoBuy.rCurve} onToggle={() => props.onToggleAutoBuy('rCurve')} />
+        <div className="bg-zinc-50 border border-zinc-200 p-4 mb-4">
+          <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-4">自动购买协议 (Auto_Acquisition_Protocols)</div>
+          <div className="grid grid-cols-2 gap-3">
+            <Toggle label="基础参数 (Base)" on={props.autoBuy.base} onToggle={() => props.onToggleAutoBuy('base')} />
+            <Toggle label="速率参数 (Rate)" on={props.autoBuy.r} onToggle={() => props.onToggleAutoBuy('r')} />
+            <Toggle label="倍率 (Multiplier)" on={props.autoBuy.multiplier} onToggle={() => props.onToggleAutoBuy('multiplier')} />
+            <Toggle label="曲线 (b Curve)" on={props.autoBuy.bCurve} onToggle={() => props.onToggleAutoBuy('bCurve')} />
+            <Toggle label="曲线 (r Curve)" on={props.autoBuy.rCurve} onToggle={() => props.onToggleAutoBuy('rCurve')} />
           </div>
         </div>
 
-        <div className="mt-3 rounded-xl bg-gray-50 border border-gray-200 p-4">
-          <div className="font-semibold text-gray-900">存档</div>
-          <div className="mt-3 flex items-center gap-2">
+        <div className="bg-zinc-50 border border-zinc-200 p-4">
+          <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-4">数据管理 (Data_Management)</div>
+          <div className="flex items-center gap-2 mb-6">
             <button
               type="button"
               onClick={() => {
                 props.onReset();
                 props.onClose();
               }}
-              className="inline-flex items-center px-3 py-2 rounded-lg bg-white shadow-sm border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-300 hover:shadow transition-all text-sm font-medium"
+              className="px-4 py-2 border border-red-900/30 text-red-600 bg-red-50 hover:bg-red-100 hover:border-red-900/50 text-xs font-bold tracking-widest uppercase transition-all w-full"
             >
-              清空存档并重置
+              !! 清除数据并重置 (PURGE_DATA) !!
             </button>
           </div>
 
-          <div className="mt-4 text-sm font-semibold text-gray-900">导出码</div>
+          <div className="text-[10px] text-zinc-500 font-mono uppercase mb-2">导出存档 (Export_Sequence)</div>
           <textarea
             readOnly
             value={exportText}
             spellCheck={false}
-            className="mt-2 w-full h-24 rounded-lg border border-gray-200 bg-white p-3 font-mono text-xs text-gray-700"
+            className="w-full h-20 bg-zinc-100 border border-zinc-200 p-3 font-mono text-[10px] text-zinc-600 focus:outline-none focus:border-blue-500/50 resize-none mb-2"
           />
-          <div className="mt-2 flex justify-end">
+          <div className="flex justify-end mb-6">
             <button
               type="button"
               onClick={async () => {
@@ -89,38 +92,38 @@ export function SettingsModal(props: {
                   await navigator.clipboard.writeText(exportText);
                 } catch {}
               }}
-              className="inline-flex items-center px-3 py-2 rounded-lg bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium transition-colors"
+              className="px-3 py-1.5 border border-zinc-200 text-zinc-400 hover:text-zinc-900 hover:border-zinc-400 text-[10px] font-bold tracking-widest uppercase transition-colors"
             >
-              复制到剪贴板
+              复制到剪贴板 (COPY)
             </button>
           </div>
 
-          <div className="mt-4 text-sm font-semibold text-gray-900">导入码</div>
+          <div className="text-[10px] text-zinc-500 font-mono uppercase mb-2">导入存档 (Import_Sequence)</div>
           <textarea
             value={importText}
             onChange={e => {
               setImportText(e.target.value);
               setImportError(null);
             }}
-            placeholder="粘贴导入码"
+            placeholder="// 在此粘贴存档数据 (PASTE_DATA_HERE)"
             spellCheck={false}
-            className="mt-2 w-full h-24 rounded-lg border border-gray-200 bg-white p-3 font-mono text-xs text-gray-700"
+            className="w-full h-20 bg-zinc-100 border border-zinc-200 p-3 font-mono text-[10px] text-zinc-600 focus:outline-none focus:border-blue-500/50 resize-none mb-2"
           />
-          {importError && <div className="mt-2 text-sm text-red-600">{importError}</div>}
-          <div className="mt-2 flex justify-end">
+          {importError && <div className="text-xs text-red-600 font-mono mb-2">[错误]: {importError}</div>}
+          <div className="flex justify-end">
             <button
               type="button"
               onClick={() => {
                 const res = props.onImport(importText);
                 if (!res.ok) {
-                  setImportError(res.error ?? '导入失败');
+                  setImportError(res.error ?? 'IMPORT_FAILED');
                   return;
                 }
                 props.onClose();
               }}
-              className="inline-flex items-center px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold tracking-widest uppercase transition-colors"
             >
-              导入并应用
+              执行导入 (EXECUTE_IMPORT)
             </button>
           </div>
         </div>
@@ -134,12 +137,14 @@ function Toggle(props: { label: string; on: boolean; onToggle: () => void }) {
     <button
       type="button"
       onClick={props.onToggle}
-      className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
-        props.on ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200 hover:text-blue-600 hover:border-blue-300 hover:shadow'
+      className={`flex items-center justify-between border px-3 py-2 transition-all group ${
+        props.on 
+          ? 'bg-blue-50 border-blue-500/50 text-blue-600' 
+          : 'bg-white border-zinc-200 text-zinc-500 hover:border-zinc-400 hover:text-zinc-700'
       }`}
     >
-      <span>{props.label}</span>
-      <span className="font-mono text-xs">{props.on ? 'ON' : 'OFF'}</span>
+      <span className="text-xs font-mono uppercase">{props.label}</span>
+      <div className={`w-2 h-2 rounded-full ${props.on ? 'bg-blue-600 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-zinc-300'}`}></div>
     </button>
   );
 }

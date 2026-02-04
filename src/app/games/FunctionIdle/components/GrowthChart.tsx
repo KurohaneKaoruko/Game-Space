@@ -131,21 +131,21 @@ export function GrowthChart(props: { points: GrowthPoint[]; now: number; windowM
   }, [innerW, padding.l]);
 
   return (
-    <div className="relative w-full overflow-hidden rounded-lg border border-gray-200 bg-gradient-to-b from-gray-50 to-gray-100">
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-3">
-        <div className="max-w-[92%] text-center font-mono leading-snug drop-shadow-sm">
-          <div className="text-lg text-gray-900 sm:text-xl md:text-2xl">
+    <div className="relative w-full overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-3 z-10">
+        <div className="max-w-[92%] text-center font-mono leading-snug drop-shadow-sm opacity-50">
+          <div className="text-lg text-zinc-900/20 sm:text-xl md:text-2xl">
             <span>P(t+dt) = P(t)·e</span>
             <sup className="ml-0.5 text-[0.72em] align-super">(rate·dt + b)</sup>
           </div>
-          <div className="mt-1 text-xs text-gray-800/55 sm:text-sm">
+          <div className="mt-1 text-xs text-blue-600/30 sm:text-sm">
             rate = min(Rcap, r / (1 + max(0, log10(P)-S)/C))
           </div>
         </div>
       </div>
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className="w-full"
+        className="w-full relative z-20"
         onMouseMove={e => {
           const rect = (e.currentTarget as SVGElement).getBoundingClientRect();
           const x = ((e.clientX - rect.left) / rect.width) * width;
@@ -157,13 +157,13 @@ export function GrowthChart(props: { points: GrowthPoint[]; now: number; windowM
 
         {yTicks.map((t, idx) => (
           <g key={idx}>
-            <line x1={padding.l} y1={t.y} x2={padding.l + innerW} y2={t.y} stroke="#e5e7eb" strokeWidth="1" />
+            <line x1={padding.l} y1={t.y} x2={padding.l + innerW} y2={t.y} stroke="#e4e4e7" strokeWidth="1" />
           </g>
         ))}
 
         {xTicks.map((t, idx) => (
           <g key={idx}>
-            <line x1={t.x} y1={padding.t} x2={t.x} y2={padding.t + innerH} stroke="#eef2f7" strokeWidth="1" />
+            <line x1={t.x} y1={padding.t} x2={t.x} y2={padding.t + innerH} stroke="#e4e4e7" strokeWidth="1" />
           </g>
         ))}
 
@@ -174,38 +174,38 @@ export function GrowthChart(props: { points: GrowthPoint[]; now: number; windowM
             <path d={pathD} fill="none" stroke="url(#grad)" strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" />
           </g>
         ) : (
-          <text x={padding.l + innerW / 2} y={padding.t + innerH / 2} textAnchor="middle" fontSize="14" fill="#9ca3af">
-            暂无数据
+          <text x={padding.l + innerW / 2} y={padding.t + innerH / 2} textAnchor="middle" fontSize="14" fill="#71717a">
+            AWAITING_DATA...
           </text>
         )}
 
         <defs>
           <linearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#60a5fa" />
-            <stop offset="100%" stopColor="#a78bfa" />
+            <stop offset="0%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#3b82f6" />
           </linearGradient>
           <linearGradient id="areaGrad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="#a78bfa" stopOpacity="0.35" />
+            <stop offset="0%" stopColor="#2563eb" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.15" />
           </linearGradient>
           <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#60a5fa" floodOpacity="0.35" />
-            <feDropShadow dx="0" dy="2" stdDeviation="6" floodColor="#a78bfa" floodOpacity="0.22" />
+            <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#2563eb" floodOpacity="0.35" />
+            <feDropShadow dx="0" dy="2" stdDeviation="6" floodColor="#3b82f6" floodOpacity="0.22" />
           </filter>
         </defs>
 
         {hover && (
           <g>
-            <line x1={hover.x} y1={padding.t} x2={hover.x} y2={padding.t + innerH} stroke="#94a3b8" strokeDasharray="4 4" />
-            <circle cx={hover.x} cy={hover.y} r="5" fill="#111827" />
-            <circle cx={hover.x} cy={hover.y} r="3" fill="#60a5fa" />
+            <line x1={hover.x} y1={padding.t} x2={hover.x} y2={padding.t + innerH} stroke="#a1a1aa" strokeDasharray="4 4" />
+            <circle cx={hover.x} cy={hover.y} r="5" fill="#ffffff" />
+            <circle cx={hover.x} cy={hover.y} r="3" fill="#2563eb" />
             <g transform={`translate(${clamp(hover.x + 12, padding.l, padding.l + innerW - 220)}, ${clamp(hover.y - 34, padding.t, padding.t + innerH - 54)})`}>
-              <rect width="220" height="54" rx="12" fill="white" stroke="#e5e7eb" />
-              <text x="10" y="22" fontSize="12" fill="#111827" fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">
+              <rect width="220" height="54" rx="4" fill="#ffffff" stroke="#e4e4e7" strokeWidth="1" />
+              <text x="10" y="22" fontSize="12" fill="#18181b" fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">
                 log10(P)={hover.p.y.toFixed(3)}
               </text>
-              <text x="10" y="42" fontSize="12" fill="#6b7280" fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">
-                t={formatTimeAgo(props.now - hover.p.t)} 前
+              <text x="10" y="42" fontSize="12" fill="#71717a" fontFamily="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">
+                t={formatTimeAgo(props.now - hover.p.t)} AGO
               </text>
             </g>
           </g>

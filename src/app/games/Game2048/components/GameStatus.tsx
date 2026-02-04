@@ -4,35 +4,16 @@ import { useEffect, useState } from 'react';
 import GameSettings from './GameSettings';
 import '../styles/GameStatus.css';
 
-/**
- * GameStatus组件属性
- * 
- * Requirements: 3.3
- */
 interface GameStatusProps {
-  /** 棋盘大小 */
   size: number;
-  /** 当前分数 */
   score: number;
-  /** 历史最高分 */
   highScore?: number;
-  /** 是否可以撤销 */
   canUndo?: boolean;
-  /** 重新开始游戏回调 */
   onRestart: () => void;
-  /** 切换棋盘大小回调 */
   onSizeChange: (size: number) => void;
-  /** 撤销操作回调 */
   onUndo?: () => void;
 }
 
-/**
- * 游戏状态组件
- * 
- * 显示当前分数、最高分数，提供重新开始和撤销按钮。
- * 
- * Requirements: 3.3
- */
 export default function GameStatus({ 
   size, 
   score, 
@@ -51,54 +32,51 @@ export default function GameStatus({
   if (!isClient) return null;
 
   return (
-    <div className="status-container flex flex-col gap-3">
-      <div className="score-box">
-        <div className="bg-gray-100 rounded-lg p-3 text-center">
-          <p className="text-xs text-gray-500 mb-1">当前分数</p>
-          <p className="text-xl font-bold text-blue-600">{score}</p>
+    <div className="status-container flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-px bg-zinc-200 border border-zinc-200">
+        <div className="bg-zinc-50 p-3 text-center">
+          <p className="text-[10px] text-zinc-500 font-mono uppercase mb-1">Current_Score</p>
+          <p className="text-xl font-bold text-blue-600 font-mono">{score}</p>
         </div>
         
-        <div className="bg-gray-100 rounded-lg p-3 text-center">
-          <p className="text-xs text-gray-500 mb-1">最高分数</p>
-          <p className="text-xl font-bold text-purple-600">{highScore}</p>
+        <div className="bg-zinc-50 p-3 text-center">
+          <p className="text-[10px] text-zinc-500 font-mono uppercase mb-1">Record_High</p>
+          <p className="text-xl font-bold text-purple-600 font-mono">{highScore}</p>
         </div>
       </div>
 
       <GameSettings size={size} onSizeChange={onSizeChange} />
       
-      {/* 移动端：按钮并排显示；桌面端：按钮分两行显示 */}
-      <div className="flex gap-2 lg:flex-col">
-        {/* 撤销按钮 - Requirements: 3.3 */}
+      <div className="flex gap-2 flex-col">
         <button
           type="button"
           onClick={onUndo}
           disabled={!canUndo}
           className={`
-            flex-1 py-2 px-4 rounded-lg font-medium text-sm transition-colors 
-            justify-center flex items-center
+            w-full py-3 px-4 border border-zinc-200 text-xs font-bold tracking-widest uppercase transition-colors
+            flex items-center justify-center gap-2
             ${canUndo 
-              ? 'bg-amber-500 hover:bg-amber-600 text-white cursor-pointer' 
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              ? 'text-amber-600 hover:bg-amber-500/10 hover:border-amber-500/30' 
+              : 'text-zinc-400 cursor-not-allowed opacity-50'
             }
           `}
-          title={canUndo ? '撤销上一步' : '无法撤销'}
+          title={canUndo ? 'Undo Last Move' : 'Undo Unavailable'}
         >
-          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
           </svg>
-          撤销
+          UNDO_STEP
         </button>
 
-        {/* 重新开始按钮 */}
         <button
           type="button"
           onClick={onRestart}
-          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium text-sm transition-colors justify-center flex items-center"
+          className="w-full py-3 px-4 bg-blue-600 text-white text-xs font-bold tracking-widest uppercase hover:bg-blue-500 transition-colors shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] flex items-center justify-center gap-2"
         >
-          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
           </svg>
-          重新开始
+          REBOOT_SYSTEM
         </button>
       </div>
     </div>

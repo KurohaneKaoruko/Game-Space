@@ -134,12 +134,12 @@ function GameTileComponent({
       case 4096:
         return "bg-[#6200EA] text-white"; // 深紫色
       case 8192:
-        return "bg-[#FFD600] text-white"; // 亮黄色
+        return "bg-[#FFD600] text-zinc-900"; // 亮黄色 (dark text for contrast)
       // 超大数值 (金属渐变)
       case 16384:
-        return "bg-gradient-to-br from-[#FFEB3B] to-[#FF9800] text-white"; // 黄金
+        return "bg-gradient-to-br from-[#FFEB3B] to-[#FF9800] text-zinc-900"; // 黄金 (dark text for contrast)
       case 32768:
-        return "bg-gradient-to-br from-[#E0E0E0] to-[#9E9E9E] text-white"; // 白银
+        return "bg-gradient-to-br from-[#E0E0E0] to-[#9E9E9E] text-zinc-900"; // 白银 (dark text for contrast)
       case 65536:
         return "bg-gradient-to-br from-[#FF6B6B] to-[#FF8E53] text-white animate-pulse"; // 熔岩橙
       // 百万级数值 (霓虹特效)
@@ -148,12 +148,12 @@ function GameTileComponent({
       case 262144:
         return "bg-gradient-to-br from-[#FF61D2] to-[#FE9090] text-white animate-pulse"; // 霓虹粉
       case 524288:
-        return "bg-gradient-to-br from-[#76FF03] to-[#C6FF00] text-white animate-pulse shadow-glow"; // 霓虹绿
+        return "bg-gradient-to-br from-[#76FF03] to-[#C6FF00] text-zinc-900 animate-pulse shadow-glow"; // 霓虹绿 (dark text)
       // 终极特效 (动态渐变)
       default:
         return value >= 1048576
           ? "bg-gradient-to-br from-[#FF1744] via-[#D500F9] to-[#3D5AFE] animate-gradient-x text-white animate-pulse shadow-glow" // 流动三色
-          : "bg-[#212121] text-white";
+          : "bg-zinc-100 text-zinc-900 border border-zinc-300";
     }
   };
 

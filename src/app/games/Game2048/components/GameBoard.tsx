@@ -142,7 +142,7 @@ export default function GameBoard({
     return Array.from({ length: gridSize * gridSize }, (_, index) => (
       <div 
         key={`bg-${index}`} 
-        className="aspect-square rounded-md bg-gray-200"
+        className="aspect-square bg-zinc-200 border border-zinc-300"
       />
     ));
   }, [gridSize]);
@@ -303,7 +303,7 @@ export default function GameBoard({
     <div 
       ref={boardRef}
       id="game-board" 
-      className="bg-gray-100 rounded-lg p-2 aspect-square max-w-[80vh] mx-auto touch-none"
+      className="bg-zinc-100 border border-zinc-300 p-2 aspect-square w-full max-w-[650px] mx-auto touch-none"
     >
       <div 
         ref={gridRef}

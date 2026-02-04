@@ -114,7 +114,7 @@ function GameRulesContent() {
 function Rule({ icon, text }: { icon: string, text: string }) {
   return (
     <div className="flex items-start mt-2 text-sm text-gray-600">
-      <span className="text-center w-6 flex-shrink-0">{icon}</span>
+      <span className="text-center w-6 shrink-0">{icon}</span>
       <span className="ml-2">{text}</span>
     </div>
   );

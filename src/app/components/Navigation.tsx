@@ -4,8 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, ReactNode } from 'react';
 
-export default function Navigation() {
+export default function Navigation({ title }: { title?: string }) {
   const pathname = usePathname();
+  const isHome = pathname === '/';
+  const isGames = pathname.startsWith('/games');
+  const isTools = pathname.startsWith('/tools');
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
@@ -22,27 +25,39 @@ export default function Navigation() {
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       scrolled 
-        ? 'bg-white/90 backdrop-blur-md shadow-md' 
-        : 'bg-white/80 backdrop-blur-sm border-b border-gray-200'
+        ? 'bg-white/90 backdrop-blur-md border-b border-zinc-200 shadow-sm' 
+        : 'bg-transparent border-b border-transparent'
     }`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2 text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors">
-              <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-              </svg>
-              <span className="hidden sm:inline">Game-Space</span>
+            <Link href="/" className="group flex items-center space-x-2 text-xl font-bold text-zinc-900 hover:text-blue-600 transition-colors tracking-tighter">
+              <div className="relative flex items-center justify-center w-8 h-8 border border-zinc-200 bg-zinc-50 group-hover:border-blue-500/50 group-hover:bg-blue-50 transition-colors">
+                <svg className="w-5 h-5 text-zinc-900 group-hover:text-blue-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                {/* 装饰角标 */}
+                <span className="absolute -top-px -left-px w-1 h-1 bg-zinc-300 group-hover:bg-blue-500"></span>
+                <span className="absolute -bottom-px -right-px w-1 h-1 bg-zinc-300 group-hover:bg-blue-500"></span>
+              </div>
+              {title ? (
+                <span className="font-mono uppercase text-lg">{title}</span>
+              ) : (
+                <span className="font-mono uppercase">Project<span className="text-blue-600 mx-1">/</span>Space</span>
+              )}
             </Link>
           </div>
           
           {/* 桌面导航 */}
           <div className="hidden md:flex md:items-center md:space-x-8">
-            <NavLink href="/" active={pathname === '/'}>
-              首页
+            <NavLink href="/" active={isHome}>
+              HOME
             </NavLink>
-            <NavLink href="/games" active={pathname === '/games'}>
-              项目
+            <NavLink href="/games" active={isGames}>
+              PROJECTS
+            </NavLink>
+            <NavLink href="/tools" active={isTools}>
+              TOOLS
             </NavLink>
           </div>
           
@@ -50,16 +65,16 @@ export default function Navigation() {
           <div className="flex items-center md:hidden">
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-blue-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+              className="inline-flex items-center justify-center p-2 text-zinc-500 hover:text-zinc-900 focus:outline-none"
             >
               <span className="sr-only">打开菜单</span>
               {mobileMenuOpen ? (
                 <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               ) : (
                 <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               )}
             </button>
@@ -69,13 +84,16 @@ export default function Navigation() {
       
       {/* 移动端菜单 */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200">
-          <div className="pt-2 pb-3 space-y-1 px-4">
-            <MobileNavLink href="/" active={pathname === '/'}>
-              首页
+        <div className="md:hidden bg-white border-t border-zinc-200 h-screen fixed inset-0 top-16 z-40">
+          <div className="pt-8 pb-3 space-y-1 px-4 flex flex-col gap-4">
+            <MobileNavLink href="/" active={isHome}>
+              HOME
             </MobileNavLink>
-            <MobileNavLink href="/games" active={pathname === '/games'}>
-              项目
+            <MobileNavLink href="/games" active={isGames}>
+              PROJECTS
+            </MobileNavLink>
+            <MobileNavLink href="/tools" active={isTools}>
+              TOOLS
             </MobileNavLink>
           </div>
         </div>
@@ -95,15 +113,19 @@ function NavLink({ href, active, children }: NavLinkProps) {
   return (
     <Link 
       href={href} 
-      className={`relative px-3 py-2 text-sm font-medium transition-colors ${
+      className={`group relative px-1 py-2 text-sm font-bold tracking-widest transition-colors ${
         active 
-          ? 'text-blue-600' 
-          : 'text-gray-600 hover:text-blue-600'
+          ? 'text-zinc-900' 
+          : 'text-zinc-500 hover:text-zinc-900'
       }`}
     >
-      {children}
+      <span className="relative z-10">{children}</span>
+      {/* 悬停/激活效果 */}
+      <span className={`absolute bottom-0 left-0 h-[2px] bg-blue-600 transition-all duration-300 ${
+        active ? 'w-full' : 'w-0 group-hover:w-full'
+      }`}></span>
       {active && (
-        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-full"></span>
+        <span className="absolute -top-1 -right-2 text-[10px] text-blue-600 font-mono">01</span>
       )}
     </Link>
   );
@@ -114,10 +136,10 @@ function MobileNavLink({ href, active, children }: NavLinkProps) {
   return (
     <Link 
       href={href} 
-      className={`block px-3 py-2 rounded-md text-base font-medium ${
+      className={`block px-4 py-4 text-2xl font-bold tracking-widest border-l-2 transition-all ${
         active 
-          ? 'bg-blue-50 text-blue-600' 
-          : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600'
+          ? 'border-blue-600 text-zinc-900 bg-zinc-50' 
+          : 'border-transparent text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50'
       }`}
     >
       {children}

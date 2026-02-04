@@ -40,32 +40,32 @@ interface SpeedConfig {
 const AI_MODES: AIModeConfig[] = [
   {
     id: 'fast',
-    name: '贪心策略',
-    description: '优先级启发式，响应迅速',
+    name: '贪心策略 (GREEDY)',
+    description: '/// 优先级启发式 / 响应迅速',
   },
   {
     id: 'balanced',
-    name: 'Minimax',
-    description: '博弈树搜索，平衡速度与效果',
+    name: '博弈树 (MINIMAX)',
+    description: '/// 深度搜索 / 平衡效能',
   },
   {
     id: 'optimal',
-    name: 'Expectimax',
-    description: '期望最大化搜索，效果最佳',
+    name: '期望搜索 (EXPECTIMAX)',
+    description: '/// 概率最大化 / 最优解',
   },
   {
     id: 'ntuple',
-    name: 'N-Tuple Network',
-    description: '基于机器学习的评估函数，效果最优',
+    name: '神经网络 (N-TUPLE)',
+    description: '/// 机器学习评估 / 极高胜率',
   },
 ];
 
 /** 速度选项列表 */
 const SPEED_OPTIONS: SpeedConfig[] = [
-  { id: 'turbo', name: '极速' },
-  { id: 'fast', name: '快' },
-  { id: 'normal', name: '中' },
-  { id: 'slow', name: '慢' },
+  { id: 'turbo', name: '极速 (TURBO)' },
+  { id: 'fast', name: '快 (FAST)' },
+  { id: 'normal', name: '中 (NORM)' },
+  { id: 'slow', name: '慢 (SLOW)' },
 ];
 
 /**
@@ -99,19 +99,21 @@ export default function AISettingsPanel({ board, gameOver, onMove, onMoveImmedia
   if (!isClient) return null;
 
   return (
-    <div className="p-4">
+    <div className="p-4 space-y-4">
       {/* 标题 */}
-      <div className="flex items-center mb-4">
-        <h3 className="text-lg font-bold text-gray-800 flex items-center">
-          <svg className="w-5 h-5 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-          </svg>
-          AI 玩家
+      <div>
+        <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
+          <span className="w-1 h-4 bg-blue-600"></span>
+          AI 控制 (AI_CONTROLLER)
         </h3>
+        <p className="text-[10px] text-zinc-500 font-mono mt-1 uppercase">
+          {'/// INTELLIGENT_SOLVER_MODULE'}
+        </p>
       </div>
 
       {/* AI模式选择 - Requirements: 2.1, 2.2, 2.6 */}
-      <div className="mb-4">
+      <div className="space-y-2">
+        <div className="text-xs font-bold text-zinc-900 uppercase tracking-wider">算法模型 (ALGORITHM)</div>
         <div className="space-y-2">
           {AI_MODES.map((mode) => {
             const isSelected = currentMode === mode.id;
@@ -123,26 +125,25 @@ export default function AISettingsPanel({ board, gameOver, onMove, onMoveImmedia
                 onClick={() => setMode(mode.id)}
                 disabled={isNTupleLoading}
                 className={`
-                  w-full p-3 text-left rounded-lg transition-all duration-200 border-2
+                  w-full p-2 text-left transition-all duration-200 border relative group
                   ${isSelected
-                    ? 'bg-blue-50 border-blue-400 shadow-sm'
-                    : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
+                    ? 'bg-white border-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.1)]'
+                    : 'bg-zinc-50 border-zinc-200 hover:border-blue-400 hover:bg-white'
                   }
                   ${isNTupleLoading ? 'opacity-50 cursor-wait' : ''}
                 `}
               >
-                <div className="flex items-center justify-between">
-                  <span className={`font-medium ${isSelected ? 'text-blue-700' : 'text-gray-800'}`}>
+                {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600"></div>}
+                <div className="flex items-center justify-between pl-2">
+                  <span className={`text-xs font-bold font-mono uppercase ${isSelected ? 'text-blue-700' : 'text-zinc-700'}`}>
                     {mode.name}
-                    {isNTupleLoading && ' (加载中...)'}
+                    {isNTupleLoading && ' [LOADING...]'}
                   </span>
                   {isSelected && !isNTupleLoading && (
-                    <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
+                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse shadow-sm"></div>
                   )}
                 </div>
-                <p className={`text-xs mt-1 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`}>
+                <p className={`text-[10px] font-mono mt-0.5 pl-2 ${isSelected ? 'text-blue-600/80' : 'text-zinc-400'}`}>
                   {mode.description}
                 </p>
               </button>
@@ -152,20 +153,20 @@ export default function AISettingsPanel({ board, gameOver, onMove, onMoveImmedia
         
         {/* 权重加载错误提示 */}
         {weightLoadError && (
-          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-xs text-red-600">
-              ⚠️ {weightLoadError}
+          <div className="mt-2 p-2 bg-red-50 border border-red-200">
+            <p className="text-[10px] font-mono text-red-600 uppercase">
+              [ERROR]: {weightLoadError}
             </p>
           </div>
         )}
       </div>
 
       {/* 速度调节 - Requirements: 2.7 */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          移动速度
+      <div className="space-y-2 pt-3 border-t border-zinc-200">
+        <label className="text-xs font-bold text-zinc-900 uppercase tracking-wider block">
+          处理速度 (SPEED)
         </label>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {SPEED_OPTIONS.map((speed) => {
             const isSelected = currentSpeed === speed.id;
             return (
@@ -174,10 +175,10 @@ export default function AISettingsPanel({ board, gameOver, onMove, onMoveImmedia
                 type="button"
                 onClick={() => setSpeed(speed.id)}
                 className={`
-                  py-2 px-3 text-center text-sm rounded-md transition-colors duration-200 border
+                  py-1.5 px-1 text-center text-[10px] font-bold font-mono uppercase transition-colors duration-200 border
                   ${isSelected
-                    ? 'bg-blue-100 border-blue-400 text-blue-800 font-medium'
-                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                    ? 'bg-blue-600 border-blue-600 text-white'
+                    : 'bg-zinc-50 border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:border-zinc-300'
                   }
                 `}
               >
@@ -186,8 +187,8 @@ export default function AISettingsPanel({ board, gameOver, onMove, onMoveImmedia
             );
           })}
         </div>
-        <p className="text-xs text-gray-500 mt-1 text-center">
-          {currentSpeed === 'turbo' ? '极速模式：无延迟' : `间隔: ${MOVE_SPEEDS[currentSpeed]}ms`}
+        <p className="text-[10px] text-zinc-400 font-mono text-center uppercase tracking-wider">
+          {currentSpeed === 'turbo' ? '/// NO_DELAY_EXECUTION' : `/// INTERVAL: ${MOVE_SPEEDS[currentSpeed]}ms`}
         </p>
       </div>
 
@@ -197,48 +198,43 @@ export default function AISettingsPanel({ board, gameOver, onMove, onMoveImmedia
         onClick={isRunning ? stopAI : startAI}
         disabled={gameOver && !isRunning}
         className={`
-          w-full py-3 px-4 rounded-lg font-medium text-white transition-all duration-200
-          flex items-center justify-center space-x-2
+          w-full py-2.5 px-4 font-bold text-xs tracking-widest uppercase transition-all duration-200
+          flex items-center justify-center space-x-2 border shadow-sm
           ${isRunning
-            ? 'bg-red-500 hover:bg-red-600 active:bg-red-700'
+            ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:border-red-300'
             : gameOver
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-green-500 hover:bg-green-600 active:bg-green-700'
+              ? 'bg-zinc-100 border-zinc-200 text-zinc-400 cursor-not-allowed'
+              : 'bg-blue-600 border-blue-600 text-white hover:bg-blue-500 hover:border-blue-500 hover:shadow-md'
           }
         `}
       >
         {isRunning ? (
           <>
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
-            </svg>
-            <span>停止</span>
+            <span className="w-2 h-2 bg-red-600 rounded-sm animate-pulse mr-2"></span>
+            <span>中止 (TERMINATE)</span>
           </>
         ) : (
           <>
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-3 h-3 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
             </svg>
-            <span>开始</span>
+            <span>启动 AI (INITIALIZE)</span>
           </>
         )}
       </button>
 
       {/* 运行状态指示 */}
       {isRunning && (
-        <div className="mt-3 flex items-center justify-center text-sm text-blue-600">
-          <span className="relative flex h-3 w-3 mr-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
-          </span>
-          AI 运行中...
+        <div className="flex items-center justify-center text-[10px] font-mono text-blue-600 uppercase tracking-widest">
+          <span className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-ping mr-2"></span>
+          AI_CORE_RUNNING...
         </div>
       )}
 
       {/* 游戏结束提示 */}
       {gameOver && !isRunning && (
-        <p className="mt-3 text-center text-sm text-gray-500">
-          游戏已结束，请重新开始
+        <p className="text-center text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
+          /// SYSTEM_HALTED: GAME_OVER
         </p>
       )}
     </div>

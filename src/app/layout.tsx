@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Game-Space",
+  title: "Project-Space",
   description: "小游戏项目合集",
 };
 

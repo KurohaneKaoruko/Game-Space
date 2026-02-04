@@ -1,8 +1,8 @@
-# Game-Space
+# Project-Space
 
 ## 项目介绍
 
-Game-Space 是一个展示各种小游戏项目的空间。
+Project-Space 是一个展示各种小游戏项目的空间。
 
 ## 技术栈
 
